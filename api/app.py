@@ -461,3 +461,156 @@ async def get_request_events(
     ]
 
 
+# ============================================================
+# Dashboard Request list
+# ============================================================
+
+
+@app.get(
+    "/dashboard/requests",
+)
+async def get_dashboard_requests() -> list[dict[str, Any]]:
+    """
+    Return all Requests currently known to the API.
+
+    The dashboard uses this endpoint for Request discovery and
+    navigation. Human-facing query text is included so dashboard
+    users do not need to know Request IDs.
+    """
+
+    dashboard_requests: list[
+        dict[str, Any]
+    ] = []
+
+    for request_id, record in reversed(
+        list(
+            request_store.items()
+        )
+    ):
+        events = frontend_sink.get_request_events(
+            request_id
+        )
+
+        if events:
+            projection = project_request(
+                events
+            )
+        else:
+            projection = empty_projection(
+                record
+            )
+
+        dashboard_requests.append(
+            {
+                "request_id": request_id,
+                "query": record.query,
+                "status": projection[
+                    "status"
+                ],
+                "activity": projection[
+                    "activity"
+                ],
+                "task_count": projection[
+                    "task_count"
+                ],
+                "active_tasks": projection[
+                    "active_tasks"
+                ],
+                "waiting_tasks": projection[
+                    "waiting_tasks"
+                ],
+                "completed_tasks": projection[
+                    "completed_tasks"
+                ],
+                "failed_tasks": projection[
+                    "failed_tasks"
+                ],
+                "timing": projection[
+                    "timing"
+                ],
+            }
+        )
+
+    return dashboard_requests
+
+
+# ============================================================
+# Dashboard Request projection
+# ============================================================
+
+
+@app.get(
+    "/dashboard/requests/{request_id}",
+)
+async def get_dashboard_request(
+    request_id: str,
+) -> dict[str, Any]:
+    """
+    Return the structured observability projection for one Request.
+    """
+
+    return get_request_projection(
+        request_id
+    )
+
+
+# ============================================================
+# Dashboard Request events
+# ============================================================
+
+
+@app.get(
+    "/dashboard/requests/{request_id}/events",
+)
+async def get_dashboard_request_events(
+    request_id: str,
+) -> list[dict[str, Any]]:
+    """
+    Return the complete retained raw trace for one Request.
+    """
+
+    require_request(
+        request_id
+    )
+
+    events = frontend_sink.get_request_events(
+        request_id
+    )
+
+    return [
+        serialize_event(event)
+        for event in events
+    ]
+
+
+# ============================================================
+# Dashboard Task events
+# ============================================================
+
+
+@app.get(
+    "/dashboard/tasks/{task_id}/events",
+)
+async def get_dashboard_task_events(
+    task_id: str,
+) -> list[dict[str, Any]]:
+    """
+    Return the complete retained raw trace for one Task.
+    """
+
+    events = frontend_sink.get_task_events(
+        task_id
+    )
+
+    if not events:
+        raise HTTPException(
+            status_code=404,
+            detail="Task not found.",
+        )
+
+    return [
+        serialize_event(event)
+        for event in events
+    ]
+
+
