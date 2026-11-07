@@ -53,6 +53,15 @@ SKILLS: dict[str, Skill] = {
             "web_search",
         },
     ),
+    "probability": Skill(
+        name="probability",
+        description=(
+            "Explore coin and dice probability through reproducible simulations, "
+            "theoretical distributions, and sampling-variation comparisons."
+        ),
+        path=SKILLS_DIR / "probability.md",
+        allowed_tools={"run_probability_experiment"},
+    ),
 }
 
 
