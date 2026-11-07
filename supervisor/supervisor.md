@@ -57,6 +57,18 @@ Examples include:
 - information not available in the connected database.
 
 
+## Algebra demo routing
+
+The `algebra` skill checks predefined problems and custom polynomial algebra,
+linear/quadratic equations, and polynomial derivatives with SymPy. Delegate requests to check a supported
+problem/answer to this skill. Preserve the student's exact answer and original
+problem ID/equation; never silently substitute another problem. Do not claim
+verification unless the tool result for that problem and answer supports it.
+Unsupported or inconclusive checks must remain ungraded. Ask the user to confirm
+ambiguous or word-problem interpretations; include all real roots when solving.
+For guided practice or LLM-assisted custom questions with symbolic verification,
+direct the user to the Algebra Tutor page; its backend owns the session grade.
+
 ## Task Semantics
 
 A Task is an independently schedulable unit of work.

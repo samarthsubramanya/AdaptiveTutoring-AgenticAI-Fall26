@@ -27,6 +27,9 @@ ddgs==9.16.0
 # --- PostgreSQL access (mcp_server/tools/sql_executor.py) ---
 asyncpg==0.31.0
 
+# --- Deterministic algebra verification ---
+sympy==1.14.0
+
 # --- Streamlit UI (ui/) ---
 streamlit==1.65.0
 pandas==3.0.6

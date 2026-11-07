@@ -6,7 +6,8 @@ KernelAI is an agentic runtime that turns a user request into independently sche
 
 - **Concurrent orchestration:** one supervisor per admitted request, configurable request/task concurrency, duplicate active request-ID rejection, and lifecycle cleanup.
 - **Agent runtime:** asynchronous worker loops, hosted OpenAI-compatible LLM calls, a local Ollama caller, tool discovery, and skill-based tool access. The application launcher uses the hosted model path.
-- **Tools and skills:** registered `web_search` and `text2sql` skills; an MCP server exposes web search, PostgreSQL queries restricted to `SELECT`/`WITH`, and a shell tool with workspace, timeout, output, and environment restrictions. Coding/teaching skill documents are included in `vault/`; they are not registered production skills in the current registry.
+- **Tools and skills:** registered `web_search`, `text2sql`, and bank-scoped `algebra` skills; an MCP server exposes web search, PostgreSQL queries restricted to `SELECT`/`WITH`, guarded shell execution, algebra problem discovery, and SymPy answer verification. Coding/teaching skill documents are included in `vault/`; those vault documents are not registered production skills in the current registry.
+- **Algebra tutor:** guided practice with eight predefined equations, graduated hints, retries, and prerequisite review; plus LLM-assisted custom questions with interpretation review, generated solutions/explanations/hints, and independent SymPy verification. Custom cases cover linear/quadratic equations, polynomial simplification, expansion, factoring, and derivatives.
 - **Observability:** structured request/task/worker/tool events, argument-secret redaction, bounded trace previews, terminal and JSONL sinks, indexed in-memory event histories, and frontend lifecycle projections.
 - **API and UI:** FastAPI request submission, status/activity/event endpoints, a Streamlit chat interface, a live observability dashboard, and a read-only offline learning dashboard.
 - **Offline learning:** trace loading, deterministic metrics, semantic/batched evaluation, policy inspection, candidate creation, and a learning-cycle CLI. Candidate promotion is a separate manual release operation.
@@ -21,7 +22,7 @@ Use macOS or Linux, or a Bash-capable environment such as WSL on Windows. Instal
 - Git.
 - **Python 3.11 or newer**, including `venv` and `pip`. The setup below was verified with Python 3.14.10 on macOS; make sure `python3 --version` reports a supported version.
 - Bash and `curl`, used by `start.sh`.
-- Access to an OpenAI-compatible LLM endpoint and its API key. The supplied template targets the ASU gateway.
+- Access to an OpenAI-compatible LLM endpoint and its API key for general agent/chat, learning, and LLM-assisted algebra requests. Configure all three `ASU_LLM_*` values in `.env`. The supplied template targets the ASU gateway.
 - A running PostgreSQL database and connection credentials **if using `text2sql`**. Web-only requests do not require a database. There is no bundled database server, schema migration, or seed dataset.
 
 The launcher uses ports **8000** (API), **8001** (MCP), and **8501** (UI); keep them available.
@@ -99,7 +100,7 @@ The script activates `.venv`, starts MCP, starts the API, waits for the API and 
 | Interactive API documentation | <http://127.0.0.1:8000/docs> |
 | MCP endpoint | <http://localhost:8001/mcp> |
 
-Use the Streamlit page selector to open **Observability** or **Offline Learning**. The MCP endpoint is a protocol endpoint, not a browser dashboard. The MCP process binds to `0.0.0.0:8001` in the current implementation; the API and UI launcher addresses are loopback-only.
+Use the Streamlit page selector to open **Observability**, **Offline Learning**, or **Algebra Tutor**. The MCP endpoint is a protocol endpoint, not a browser dashboard. The MCP process binds to `0.0.0.0:8001` in the current implementation; the API and UI launcher addresses are loopback-only.
 
 ### 6. Check the installation
 
@@ -134,9 +135,83 @@ Actual execution requires valid model credentials, access to the configured endp
 
 ### Setup verification
 
-Verified on November 6, 2026 with macOS and Python 3.14.10: HTTPS cloning of the default `main` branch, a fresh `.venv` dependency install, `pip check`, all **11 selected local tests**, and both CLI help commands below. The launcher reached readiness, API/UI health and dashboard HTTP checks passed, MCP discovered `web_search`, `sql_executor`, and `shell`, and Ctrl+C shut the services down.
+Verified on November 6, 2026 with macOS and Python 3.14.10: HTTPS cloning of the default `main` branch, a fresh `.venv` dependency install, `pip check`, and both CLI help commands below. The current selected suite has **105 passing tests**, including guided and LLM-assisted Streamlit flows, wrong model answers, incomplete roots, malformed model responses, bounded schema repair, and non-JSON API responses. Live model calls produced a quadratic solution and a factored expression that independently passed SymPy checks, and a model-generated hint. Earlier live API/UI health checks, the guided tutoring flow, and MCP bank-answer checks also passed. Restart MCP to load the new `verify_symbolic_answer` tool alongside the existing tools.
 
-Startup checks used an isolated copy with API/UI ports 18000/18501 because an existing process occupied port 8000; MCP used 8001. The checked launcher and application files match the remote default branch. Credentialed LLM requests, live web searches, PostgreSQL queries, and a full learning cycle were not exercised.
+The original launcher check used an isolated copy with API/UI ports 18000/18501 because an existing process occupied port 8000. The guided algebra smoke check used temporary services on API/UI ports 18000/18501 and MCP port 18001, then shut those services down. Live web searches, PostgreSQL queries, and a full learning cycle were not exercised.
+
+## Try the algebra tutor
+
+After installing the updated `requirements.txt`, start the services as above and open **Algebra Tutor** in the Streamlit page selector. This is a separate practice flow from the general chat page.
+
+1. Keep the starting problem `distribution-01` selected and click **Start new session**. The equation is `3(x - 2) = 12`.
+2. Enter `x=2` and click **Check answer**. Expect **SymPy verification: incorrect**; the problem stays open.
+3. Click **Give me a hint**. The first hint suggests dividing both sides by the factor outside the parentheses.
+4. Enter `x=6`. Expect **SymPy verification: correct** and a next-problem button.
+5. Click **Next problem**. A fresh distribution equation appears. Solve it without a hint to record independent success.
+6. To demonstrate remediation, start a new default session, submit `2` and then `4`, and click **Practice prerequisite**. Solve `3x - 6 = 12` with `6`, then click **Next problem** to return to the original equation.
+
+Use **Verification evidence** for the original equation, normalized answer, real-number domain, SymPy version, and substitution residual. **Session history** shows attempts, hints, transitions, and independent versus assisted successes. Invalid input and verifier failures remain ungraded and do not unlock advancement.
+
+Guided-practice answers are numeric literals, decimals, or fractions, optionally prefixed with `x=`: `6`, `x=6`, `12/2`, `1.5`, and `3/2`. General expressions and multiple solutions use the separate custom-problem mode below. No user input is passed to Python `eval` or SymPy's expression parser.
+
+**Guided practice** uses the predefined problem bank and rule-based feedback. **LLM-assisted problems** handles your own questions as described below. Verification covers final mathematical answers, not every reasoning step or mastery. Sessions/cases are process-local, expire after one idle hour, and disappear on API restart. Run one API worker for this demo. There is no authentication or persistent student profile; treat IDs as private and use it locally.
+
+### LLM-assisted custom problems
+
+1. Configure `ASU_LLM_API_KEY`, `ASU_LLM_BASE_URL`, and `ASU_LLM_MODEL` in `.env`, then restart the API so it loads the configuration.
+2. Open **Algebra Tutor** and select **LLM-assisted problems**.
+3. Choose an example or enter your own question, then click **Ask math tutor**.
+4. Review the operation, equation/expression, variable, real-number domain, and interpretation against your original question. Tick **This interpretation matches my question** only if it does.
+5. Click **Verify model answer**, or enter a student answer and click **Check my answer**. The backend uses its stored interpretation and computes its own SymPy result; it does not accept the model's answer as an answer key.
+6. Use **Ask for a hint** for a generated next-step hint, or expand the LLM explanation. Explanation steps are not individually verified.
+
+Examples to try:
+
+| Question | Answer to check |
+|---|---|
+| Solve `x^2 - 5*x + 6 = 0`. | `2,3` (both roots; `2` alone is incomplete) |
+| Solve `x^2 - 2 = 0`. | `-sqrt(2),sqrt(2)` |
+| Solve `x^2 - x + 6 = 0` over the reals. | `no real solutions` |
+| Factor `x^2 - 9`. | `(x-3)*(x+3)` |
+| Expand `(x+2)*(x-3)`. | `x^2-x-6` |
+| Simplify `3*x + 2*x - 4`. | `5*x-4` |
+| Differentiate `x^3 - 2*x`. | `3*x^2-2` |
+| A number doubled and increased by 3 equals 17. | Review the translation `2*x+3=17`; then check `7`. |
+
+The checker supports one variable (`x`, `y`, or `t`), rational-coefficient polynomials of degree at most 8, and linear/quadratic solving over the reals. Use explicit `*`, integer powers `0..6`, and numeric constant denominators. For equations, provide every real root; `no real solutions` is accepted for an empty real solution set. Arbitrary code/functions, variable denominators, systems, inequalities, trigonometry, geometry, and proofs are outside scope. Inputs are parsed with an allowlisted AST and never executed as Python code.
+
+A correct symbolic result proves the checked statement for the **reviewed interpretation**; it does not establish that an LLM correctly translated a word problem. Unsupported, invalid, or inconclusive checks remain ungraded. Equivalent expressions in the wrong requested factor/expanded form receive a `needs_form` result. Incomplete or malformed model responses receive at most one format-repair attempt within an overall timeout; missing answers are never filled in as if the model supplied them. Model failures return an actionable error rather than a fabricated solution.
+
+The agent runtime can discover `algebra_problems`, `verify_algebra_answer`, and `verify_symbolic_answer` through MCP using the `algebra` skill. General-chat prose does not update a tutoring session or serve as an authoritative grade.
+
+### Test the demo automatically
+
+```bash
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m pytest -q tests/test_algebra.py tests/test_algebra_api.py tests/test_custom_math.py tests/test_observability.py tests/test_tool_observability.py
+```
+
+These automated tests use mocked model replies and make no live provider/database/web-search calls. They cover bank and custom answers, incomplete root sets, wrong model proposals, malformed model output, missing credentials, interpretation confirmation, unsupported expressions, session isolation, stale submissions, the non-JSON response regression, and both Streamlit flows.
+
+### Try the tutoring API
+
+With the API running, create a session:
+
+```bash
+curl --fail -X POST http://127.0.0.1:8000/tutoring/sessions \
+  -H 'Content-Type: application/json' -d '{}'
+```
+
+Copy its `session_id` into `YOUR_SESSION_ID` below. A new session has revision `0`:
+
+```bash
+curl --fail -X POST http://127.0.0.1:8000/tutoring/sessions/YOUR_SESSION_ID/answers \
+  -H 'Content-Type: application/json' \
+  -d '{"problem_id":"distribution-01","answer":"2","revision":0}'
+```
+
+Use the returned `revision` for the next action. The API rejects stale revisions or a different problem ID with HTTP 409, so retries cannot silently grade the wrong problem. The `/docs` page lists all `/tutoring` routes, including hints, next problem, session retrieval, and deletion. Client-supplied grade fields are rejected.
 
 ## Offline learning
 
@@ -183,6 +258,7 @@ Most other tests under `tests/` are live integration tests. They may require hos
 | `supervisor/`, `tasks/`, `worker/` | Delegation, task execution, model/tool clients, and agent runtime. |
 | `mcp_server/`, `skills/`, `vault/` | Tools, production skill registry, and additional skill documents. |
 | `observability/` | Events, sanitization, sinks, and frontend projections. |
+| `tutoring/` | Trusted algebra bank, exact verification, in-memory sessions, and tutoring API routes. |
 | `api/`, `ui/`, `.streamlit/`, `start.sh` | HTTP API, chat/dashboard pages, theme, and service launcher. |
 | `learning/`, `generate_learning_traces.py` | Offline evaluation, candidates/releases, and workload generation. |
 | `tests/`, `docs/` | Tests, historical artifacts, sample prompts, and runtime contract notes. |

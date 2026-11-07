@@ -30,6 +30,15 @@ class Skill:
 
 
 SKILLS: dict[str, Skill] = {
+    "algebra": Skill(
+        name="algebra",
+        description=(
+            "Check student answers to eight predefined introductory algebra "
+            "equations, or verify custom polynomial algebra and derivatives with SymPy."
+        ),
+        path=SKILLS_DIR / "algebra.md",
+        allowed_tools={"algebra_problems", "verify_algebra_answer", "verify_symbolic_answer"},
+    ),
     "text2sql": Skill(
         name="text2sql",
         description=(

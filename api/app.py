@@ -31,6 +31,7 @@ from observability.sinks.terminal import TerminalSink
 from observability.tracer import RuntimeTracer
 from orchestrator.orchestrator import Orchestrator
 from tasks.request import Request
+from tutoring.api import router as tutoring_router
 
 
 # ============================================================
@@ -41,6 +42,7 @@ app = FastAPI(
     title="KernelAI",
     version="0.1.0",
 )
+app.include_router(tutoring_router)
 
 
 # ============================================================
