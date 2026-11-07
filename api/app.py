@@ -9,6 +9,8 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+from tutoring.linear_systems_api import router as linear_systems_router
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
@@ -42,6 +44,8 @@ app = FastAPI(
     version="0.1.0",
 )
 
+
+app.include_router(linear_systems_router)
 
 # ============================================================
 # API models

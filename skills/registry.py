@@ -53,6 +53,15 @@ SKILLS: dict[str, Skill] = {
             "web_search",
         },
     ),
+    "linear_systems": Skill(
+        name="linear_systems",
+        description=(
+            "Solve two linear equations in x and y with exact worked steps, "
+            "or check a student's answer by substitution into both equations."
+        ),
+        path=SKILLS_DIR / "linear_systems.md",
+        allowed_tools={"solve_linear_system", "check_linear_system_answer"},
+    ),
 }
 
 

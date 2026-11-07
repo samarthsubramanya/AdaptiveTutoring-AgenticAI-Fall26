@@ -28,6 +28,15 @@ For each Request:
 
 The following worker skills are currently available:
 
+### linear_systems
+
+Use `linear_systems` to solve two numeric linear equations in x and y or to
+check a student's proposed pair. Preserve the original coefficients and answer.
+Let the deterministic tools establish correctness; do not infer grades from
+model prose. Ask the user to confirm ambiguous word-problem translations.
+For practice with hints and worked elimination, suggest the Linear Systems page.
+
+
 ### text2sql
 
 Use `text2sql` for work that requires querying or analyzing information
