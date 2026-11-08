@@ -6,7 +6,7 @@ KernelAI is an agentic runtime that turns a user request into independently sche
 
 - **Concurrent orchestration:** one supervisor per admitted request, configurable request/task concurrency, duplicate active request-ID rejection, and lifecycle cleanup.
 - **Agent runtime:** asynchronous worker loops, hosted OpenAI-compatible LLM calls, a local Ollama caller, tool discovery, and skill-based tool access. The application launcher uses the hosted model path.
-- **Tools and skills:** registered `web_search` and `text2sql` skills; an MCP server exposes web search, PostgreSQL queries restricted to `SELECT`/`WITH`, and a shell tool with workspace, timeout, output, and environment restrictions. Coding/teaching skill documents are included in `vault/`; they are not registered production skills in the current registry.
+- **Tools and skills:** registered `web_search` skills; an MCP server exposes web search, PostgreSQL queries restricted to `SELECT`/`WITH`, and a shell tool with workspace, timeout, output, and environment restrictions. Coding,teaching,math skill documents are included in `vault/`.
 - **Observability:** structured request/task/worker/tool events, argument-secret redaction, bounded trace previews, terminal and JSONL sinks, indexed in-memory event histories, and frontend lifecycle projections.
 - **API and UI:** FastAPI request submission, status/activity/event endpoints, a Streamlit chat interface, a live observability dashboard, and a read-only offline learning dashboard.
 - **Offline learning:** trace loading, deterministic metrics, semantic/batched evaluation, policy inspection, candidate creation, and a learning-cycle CLI. Candidate promotion is a separate manual release operation.
@@ -21,8 +21,8 @@ Use macOS or Linux, or a Bash-capable environment such as WSL on Windows. Instal
 - Git.
 - **Python 3.11 to 3.14**, including `venv` and `pip`. The setup below was verified with Python 3.14.10 on macOS; on Python 3.15 the `pyarrow` dependency failed to build. Make sure `python3 --version` reports a supported version.
 - Bash and `curl`, used by `start.sh`.
-- Access to an OpenAI-compatible LLM endpoint and its API key. The supplied template targets the ASU gateway.
-- A running PostgreSQL database and connection credentials **if using `text2sql`**. Web-only requests do not require a database. There is no bundled database server, schema migration, or seed dataset.
+- Access to an OpenAI-compatible LLM endpoint and its API key. The supplied template targets the ASU Voyager gateway.
+
 
 The launcher uses ports **8000** (API), **8001** (MCP), and **8501** (UI); keep them available.
 
@@ -63,9 +63,6 @@ ASU_LLM_MODEL=glm-5-3-flash
 MCP_SERVER_URL=http://localhost:8001/mcp
 KERNELAI_AGENT=generic
 SHELL_WORKSPACE=/absolute/path/to/kernelai-workspace
-
-# Required only for database-backed requests:
-DATABASE_URL=postgresql://username:password@localhost:5432/database_name
 ```
 
 | Setting | Purpose |
@@ -76,11 +73,10 @@ DATABASE_URL=postgresql://username:password@localhost:5432/database_name
 | `MCP_SERVER_URL` | MCP endpoint used by task workers. |
 | `KERNELAI_AGENT` | Keep `generic`; it is the implemented agent backend. |
 | `SHELL_WORKSPACE` | Existing directory used as the shell tool's workspace. |
-| `DATABASE_URL` | PostgreSQL connection string used by `asyncpg`; provision your own database/schema. |
 
-The backend loads `.env` automatically. Keep credentials in the ignored `.env` file. The template also contains `KERNELAI_VAULT_PATH`, but the current runtime does not read it. `skills/registry.py` registers the `web_search` and `text2sql` prompts from fixed paths under `vault/skills/`; changing the variable does not register the vault's coding or teaching skills. The startup script sets `API_BASE_URL` for the UI automatically.
+The backend loads `.env` automatically. Keep credentials in the ignored `.env` file. The template also contains `KERNELAI_VAULT_PATH`, but the current runtime does not read it. `skills/registry.py` registers the `web_search` prompts from fixed paths under `vault/skills/`; changing the variable does not register the vault's coding or teaching skills. The startup script sets `API_BASE_URL` for the UI automatically.
 
-For database requests, use tables that actually exist in your database. Prompts and integration tests mentioning `customers`, `products`, or `orders` assume those tables have been provisioned externally.
+ Prompts and integration tests mentioning `customers`, `products`, or `orders` assume those tables have been provisioned externally. We also have placeholders for database access to provide knowledge from database sets of questions, However, it has not been validated yet. This would allow for private questions and datasets to be used for answering queries.
 
 ### 5. Start KernelAI
 
@@ -170,7 +166,6 @@ The built-in workload includes database questions as well as web research. Confi
 | Missing packages or incompatible Python | Activate `.venv`, check `python --version`, reinstall `requirements.txt`, and run `python -m pip check`. |
 | Missing `ASU_LLM_*` variables or model authentication errors | Fill all three settings in `.env` and confirm the endpoint/model are available to your account. |
 | Tool connection fails | Confirm MCP is running and `MCP_SERVER_URL` ends in `/mcp` on port 8001. |
-| `DATABASE_URL` missing or SQL relation does not exist | Add the connection string and provision the requested tables in PostgreSQL. |
 | Shell workspace error | Replace `workspace_path` from the template with the absolute path of an existing directory. |
 | Address already in use | Stop the process occupying 8000, 8001, or 8501, then restart the launcher. |
 | UI startup stalls at an email prompt | Use `STREAMLIT_SERVER_HEADLESS=true bash start.sh`. |
@@ -183,7 +178,7 @@ Most other tests under `tests/` are live integration tests. They may require hos
 |---|---|
 | `orchestrator/` | Request admission and lifecycle coordination. |
 | `supervisor/`, `tasks/`, `worker/` | Delegation, task execution, model/tool clients, and agent runtime. |
-| `mcp_server/`, `skills/`, `vault/` | Tools, the skill registry (`skills/registry.py`), and skill documents, including the registered `web_search` and `text2sql` prompts. |
+| `mcp_server/`, `skills/`, `vault/` | Tools, the skill registry (`skills/registry.py`), and skill documents, including the registered `web_search`  prompts. |
 | `observability/` | Events, sanitization, sinks, and frontend projections. |
 | `api/`, `ui/`, `.streamlit/`, `start.sh` | HTTP API, chat/dashboard pages, theme, and service launcher. |
 | `learning/`, `generate_learning_traces.py` | Offline evaluation, candidates/releases, and workload generation. |
