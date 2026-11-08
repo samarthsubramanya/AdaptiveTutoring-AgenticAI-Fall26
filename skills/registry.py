@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
-SKILLS_DIR = Path(__file__).parent
+SKILLS_DIR = Path(__file__).parent.parent / "vault" / "skills"
 
 
 @dataclass(frozen=True)
@@ -36,7 +36,7 @@ SKILLS: dict[str, Skill] = {
             "Answer questions using the connected PostgreSQL "
             "database through schema discovery and read-only SQL."
         ),
-        path=SKILLS_DIR / "text2sql.md",
+        path=SKILLS_DIR / "data" / "text2sql" / "text2sql.md",
         allowed_tools={
             "sql_executor",
         },
@@ -48,7 +48,7 @@ SKILLS: dict[str, Skill] = {
             "Research current or external information using "
             "web search."
         ),
-        path=SKILLS_DIR / "web_search.md",
+        path=SKILLS_DIR / "research" / "web-search" / "web-search.md",
         allowed_tools={
             "web_search",
         },
