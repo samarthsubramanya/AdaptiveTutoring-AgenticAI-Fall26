@@ -57,12 +57,18 @@ CANDIDATE_ROOT = (
 POLICY_PATHS: dict[str, Path] = {
     "web_search": (
         REPOSITORY_ROOT
+        / "vault"
         / "skills"
-        / "web_search.md"
+        / "research"
+        / "web-search"
+        / "web-search.md"
     ),
     "text2sql": (
         REPOSITORY_ROOT
+        / "vault"
         / "skills"
+        / "data"
+        / "text2sql"
         / "text2sql.md"
     ),
     "supervisor": (
