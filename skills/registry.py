@@ -39,13 +39,25 @@ SKILLS: dict[str, Skill] = {
         path=SKILLS_DIR / "algebra.md",
         allowed_tools={"algebra_problems", "verify_algebra_answer", "verify_symbolic_answer"},
     ),
+    "inequalities": Skill(
+        name="inequalities",
+        description="Verify full real solution sets for linear and quadratic inequalities, including endpoints.",
+        path=SKILLS_DIR / "inequalities.md",
+        allowed_tools={"verify_inequality_answer"},
+    ),
+    "statistics": Skill(
+        name="statistics",
+        description="Check descriptive statistics on explicit data, with population/sample conventions.",
+        path=SKILLS_DIR / "statistics.md",
+        allowed_tools={"verify_statistics_answer"},
+    ),
     "text2sql": Skill(
         name="text2sql",
         description=(
             "Answer questions using the connected PostgreSQL "
             "database through schema discovery and read-only SQL."
         ),
-        path=SKILLS_DIR / "text2sql.md",
+        path=SKILLS_DIR.parent / "vault/skills/data/text2sql/text2sql.md",
         allowed_tools={
             "sql_executor",
         },
@@ -57,7 +69,7 @@ SKILLS: dict[str, Skill] = {
             "Research current or external information using "
             "web search."
         ),
-        path=SKILLS_DIR / "web_search.md",
+        path=SKILLS_DIR.parent / "vault/skills/research/web-search/web-search.md",
         allowed_tools={
             "web_search",
         },

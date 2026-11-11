@@ -262,3 +262,25 @@ Most other tests under `tests/` are live integration tests. They may require hos
 | `api/`, `ui/`, `.streamlit/`, `start.sh` | HTTP API, chat/dashboard pages, theme, and service launcher. |
 | `learning/`, `generate_learning_traces.py` | Offline evaluation, candidates/releases, and workload generation. |
 | `tests/`, `docs/` | Tests, historical artifacts, sample prompts, and runtime contract notes. |
+
+## Inequalities and descriptive statistics
+
+The registered `inequalities` and `statistics` skills expose deterministic tools
+through MCP, with credential-free HTTP checks for the learning workspace:
+
+- `POST /studio/inequalities/check`: `expression`, `relation` (`<`, `<=`, `>`,
+  `>=`), `rhs`, `variable`, and `answer`. Supports real constant, linear, and
+  quadratic polynomials. Use complete interval notation such as `(-inf, 4]`,
+  unions separated by ` U `, isolated points `{0}`, `empty`, or `R`.
+- `POST /studio/statistics/check`: rational `values` (1–100 strings), `metric`
+  (`mean`, `median`, `range`, `variance`, `standard_deviation`), `convention`
+  (`population` or `sample`), and `answer`. Sample variance uses `n - 1` and
+  needs at least two observations. Checks accept error up to
+  `max(1e-8, abs(expected) * 1e-6)`; use fractions or numeric square roots for
+  exact answers. Modes include all ties; no repeats means no mode.
+- `GET /studio/skills`: the student-facing practice catalogue.
+
+Both skills reuse the allowlisted mathematical parser; student expressions are
+never executed. Unsupported expressions are ungraded. Verification establishes
+numeric answers or complete solution sets, not student mastery or proof quality.
+Streamlit and its existing session endpoints remain available.

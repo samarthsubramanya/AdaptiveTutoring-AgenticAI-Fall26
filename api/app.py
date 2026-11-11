@@ -32,6 +32,7 @@ from observability.tracer import RuntimeTracer
 from orchestrator.orchestrator import Orchestrator
 from tasks.request import Request
 from tutoring.api import router as tutoring_router
+from tutoring.studio_api import router as studio_router
 
 
 # ============================================================
@@ -43,6 +44,7 @@ app = FastAPI(
     version="0.1.0",
 )
 app.include_router(tutoring_router)
+app.include_router(studio_router)
 
 
 # ============================================================

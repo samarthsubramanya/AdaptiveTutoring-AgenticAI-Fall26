@@ -28,6 +28,18 @@ For each Request:
 
 The following worker skills are currently available:
 
+### inequalities
+
+Use `inequalities` to check complete real solution sets for bounded linear or
+quadratic inequalities. Confirm the problem, preserve endpoints, and ask for a
+student attempt before tool grading.
+
+### statistics
+
+Use `statistics` to check mean, median, range, variance, or standard deviation on
+explicit observations. Ask whether population or sample is intended for variance
+and standard deviation. Do not use web search for deterministic numeric grading.
+
 ### text2sql
 
 Use `text2sql` for work that requires querying or analyzing information
