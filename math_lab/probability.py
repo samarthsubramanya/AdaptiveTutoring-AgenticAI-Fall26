@@ -3,9 +3,24 @@
 import math
 import random
 from operator import eq, ge, le
+from statistics import NormalDist
 
 
 EVENT_OPERATORS = {"eq": eq, "gte": ge, "lte": le}
+WILSON_95_Z = NormalDist().inv_cdf(0.975)
+
+
+def _wilson_interval(count: int, trials: int) -> dict[str, float]:
+    rate = count / trials
+    z_squared = WILSON_95_Z**2
+    scale = 1 + z_squared / trials
+    center = (rate + z_squared / (2 * trials)) / scale
+    margin = WILSON_95_Z * math.sqrt(rate * (1 - rate) / trials + z_squared / (4 * trials**2)) / scale
+    return {
+        "level": 0.95,
+        "lower": 0.0 if count == 0 else center - margin,
+        "upper": 1.0 if count == trials else center + margin,
+    }
 
 
 def run_probability_experiment(
@@ -119,6 +134,10 @@ def run_probability_experiment(
         ),
     }
     if event is not None:
-        event.update(count=event_count, observed_probability=event_count / trials)
+        event.update(
+            count=event_count,
+            observed_probability=event_count / trials,
+            confidence_interval=_wilson_interval(event_count, trials),
+        )
         result["event"] = event
     return result

@@ -12,6 +12,9 @@ Supported experiments:
 For an event such as a dice sum of at least 9, use `event_operator: gte`
 and `event_value: 9`. Use `eq` for exactly and `lte` for at most. Explain the
 theoretical probability as the sum of the probabilities of matching outcomes.
+The 95% Wilson confidence interval estimates the underlying event probability
+from the simulated hits and trial count. The theoretical probability is already
+known under the model. Explain that 95% refers to long-run coverage of the method.
 
 Preserve the user's requested settings. Ask for clarification if their random
 experiment differs from these assumptions. Use a stated seed to reproduce a run.

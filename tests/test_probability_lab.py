@@ -123,6 +123,9 @@ def test_dice_event_uses_the_same_trials_as_the_distribution():
     rolls = [rng.randint(1, 6) + rng.randint(1, 6) for _ in range(1000)]
     assert event["count"] == sum(Counter(rolls)[value] for value in range(9, 13)) == 300
     assert event["observed_probability"] == 0.3
+    assert event["confidence_interval"] == pytest.approx({
+        "level": 0.95, "lower": 0.272407, "upper": 0.329124,
+    }, abs=0.000001)
     assert [point["trial"] for point in event["convergence"]] == [
         point["trial"] for point in result["convergence"]
     ]
@@ -157,3 +160,15 @@ def test_invalid_dice_events_are_rejected(event):
 def test_coin_event_cutoff_cannot_exceed_the_number_of_tosses():
     with pytest.raises(ValueError, match="0 to 4"):
         run_probability_experiment("coin_heads", coin_tosses=4, event_operator="gte", event_value=5)
+
+
+@pytest.mark.parametrize("heads_probability,expected_interval", [
+    (0.0, {"level": 0.95, "lower": 0.0, "upper": 0.27753280}),
+    (1.0, {"level": 0.95, "lower": 0.72246720, "upper": 1.0}),
+])
+def test_wilson_interval_stays_bounded_with_zero_or_all_hits(heads_probability, expected_interval):
+    event = run_probability_experiment(
+        "coin_heads", trials=10, coin_tosses=1, heads_probability=heads_probability,
+        event_operator="eq", event_value=1,
+    )["event"]
+    assert event["confidence_interval"] == pytest.approx(expected_interval)
