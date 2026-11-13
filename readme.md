@@ -12,6 +12,11 @@ KernelAI is an agentic runtime that turns a user request into independently sche
 - **Offline learning:** trace loading, deterministic metrics, semantic/batched evaluation, policy inspection, candidate creation, and a learning-cycle CLI. Candidate promotion is a separate manual release operation.
 - **Existing verification coverage:** tracer/sink and tool-observability tests, runtime/API integration tests, concurrent-request tests, and historical single-request/50-task stress artifacts.
 
+## Probability Lab (work in progress)
+
+Explore coin and dice experiments with theoretical distributions, simulated
+results, and convergence charts. See [the Probability Lab guide](docs/probability-lab.md).
+
 ## Setup from scratch
 
 ### 1. Prerequisites
