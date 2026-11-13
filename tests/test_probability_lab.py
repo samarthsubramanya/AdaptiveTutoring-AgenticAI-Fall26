@@ -1,6 +1,7 @@
 """Analytical models, sampling invariants, and bounded input handling."""
 
 import random
+from collections import Counter
 
 import pytest
 
@@ -107,3 +108,52 @@ def test_dice_rejects_coin_only_options(options):
 def test_unknown_experiments_are_rejected(experiment):
     with pytest.raises(ValueError):
         run_probability_experiment(experiment)
+
+
+def test_dice_event_uses_the_same_trials_as_the_distribution():
+    settings = {"experiment": "dice_sum", "trials": 1000, "seed": 42}
+    baseline = run_probability_experiment(**settings)
+    result = run_probability_experiment(**settings, event_operator="gte", event_value=9)
+    event = result.pop("event")
+    assert result == baseline
+    assert event["outcomes"] == [9, 10, 11, 12]
+    assert event["theoretical_probability"] == pytest.approx(10 / 36)
+
+    rng = random.Random(42)
+    rolls = [rng.randint(1, 6) + rng.randint(1, 6) for _ in range(1000)]
+    assert event["count"] == sum(Counter(rolls)[value] for value in range(9, 13)) == 300
+    assert event["observed_probability"] == 0.3
+    assert [point["trial"] for point in event["convergence"]] == [
+        point["trial"] for point in result["convergence"]
+    ]
+    for point in event["convergence"]:
+        trial = point["trial"]
+        assert point["observed_probability"] == sum(roll >= 9 for roll in rolls[:trial]) / trial
+        assert point["theoretical_probability"] == pytest.approx(10 / 36)
+
+
+@pytest.mark.parametrize("operator,cutoff,outcomes,probability", [
+    ("eq", 2, [2], 6 / 16), ("lte", 1, [0, 1], 5 / 16), ("gte", 3, [3, 4], 5 / 16),
+    ("gte", 0, [0, 1, 2, 3, 4], 1.0),
+])
+def test_coin_events_sum_the_matching_binomial_probabilities(operator, cutoff, outcomes, probability):
+    event = run_probability_experiment(
+        "coin_heads", coin_tosses=4, event_operator=operator, event_value=cutoff,
+    )["event"]
+    assert event["outcomes"] == outcomes
+    assert event["theoretical_probability"] == pytest.approx(probability)
+
+
+@pytest.mark.parametrize("event", [
+    {"event_operator": "gte"}, {"event_value": 9}, {"event_operator": "gt", "event_value": 9},
+    {"event_operator": "eq", "event_value": True}, {"event_operator": "eq", "event_value": "9"},
+    {"event_operator": "lte", "event_value": 1}, {"event_operator": "gte", "event_value": 13},
+])
+def test_invalid_dice_events_are_rejected(event):
+    with pytest.raises(ValueError, match="event"):
+        run_probability_experiment("dice_sum", **event)
+
+
+def test_coin_event_cutoff_cannot_exceed_the_number_of_tosses():
+    with pytest.raises(ValueError, match="0 to 4"):
+        run_probability_experiment("coin_heads", coin_tosses=4, event_operator="gte", event_value=5)

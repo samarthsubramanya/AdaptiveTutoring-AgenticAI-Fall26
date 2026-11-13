@@ -18,6 +18,8 @@ class ExperimentRequest(BaseModel):
     seed: Annotated[int, Field(strict=True, ge=0, le=2**32 - 1)] = 42
     coin_tosses: Annotated[int, Field(strict=True, ge=1, le=20)] | None = None
     heads_probability: Annotated[float, Field(strict=True, ge=0, le=1, allow_inf_nan=False)] | None = None
+    event_operator: Literal["eq", "gte", "lte"] | None = None
+    event_value: Annotated[int, Field(strict=True, ge=0, le=20)] | None = None
 
 
 @router.post("/experiments")

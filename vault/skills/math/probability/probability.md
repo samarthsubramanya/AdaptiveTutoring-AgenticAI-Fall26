@@ -9,6 +9,10 @@ Supported experiments:
   may be biased. Use `coin_tosses` and `heads_probability` to set the model.
 - `dice_sum`: sum two independent, fair six-sided dice. Do not pass coin options.
 
+For an event such as a dice sum of at least 9, use `event_operator: gte`
+and `event_value: 9`. Use `eq` for exactly and `lte` for at most. Explain the
+theoretical probability as the sum of the probabilities of matching outcomes.
+
 Preserve the user's requested settings. Ask for clarification if their random
 experiment differs from these assumptions. Use a stated seed to reproduce a run.
 Report observed counts as simulated measurements, and theoretical probabilities

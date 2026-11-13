@@ -59,6 +59,17 @@ def test_dice_does_not_silently_ignore_coin_parameters():
     assert response.status_code == 422
 
 
+def test_event_settings_reach_the_simulation():
+    body = {"experiment": "dice_sum", "event_operator": "gte", "event_value": 9}
+    response = client.post(URL, json=body)
+    assert response.status_code == 200
+    event = response.json()["event"]
+    assert event["count"] == 300
+    assert event["theoretical_probability"] == pytest.approx(10 / 36)
+    for invalid in ({"event_value": True}, {"event_value": 1}, {"event_operator": None}):
+        assert client.post(URL, json={**body, **invalid}).status_code == 422
+
+
 @pytest.mark.asyncio
 async def test_probability_skill_is_advertised_and_callable_through_mcp():
     skill = get_skill("probability")
@@ -70,6 +81,7 @@ async def test_probability_skill_is_advertised_and_callable_through_mcp():
         assert {"run_probability_experiment", "sql_executor", "web_search"} <= names
         result = await connection.call_tool("run_probability_experiment", {
             "experiment": "dice_sum", "trials": 10, "seed": 42,
+            "event_operator": "gte", "event_value": 9,
         })
         assert not result.is_error
         payload = result.structured_content
@@ -77,13 +89,14 @@ async def test_probability_skill_is_advertised_and_callable_through_mcp():
             payload = json.loads("".join(item.text for item in result.content if hasattr(item, "text")))
         assert sum(row["count"] for row in payload["distribution"]) == 10
         assert payload["summary"]["theoretical_mean"] == 7
+        assert payload["event"]["theoretical_probability"] == pytest.approx(10 / 36)
 
 
 @pytest.mark.asyncio
 async def test_mcp_does_not_coerce_booleans_or_strings_into_experiment_settings():
     async with Client(mcp) as connection:
         for invalid in ({"trials": True}, {"seed": "42"}, {"coin_tosses": True},
-                        {"heads_probability": False}):
+                        {"heads_probability": False}, {"event_operator": "eq", "event_value": True}):
             result = await connection.call_tool("run_probability_experiment", {
                 "experiment": "coin_heads", **invalid,
             })

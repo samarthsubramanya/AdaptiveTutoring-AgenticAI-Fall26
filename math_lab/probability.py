@@ -2,6 +2,10 @@
 
 import math
 import random
+from operator import eq, ge, le
+
+
+EVENT_OPERATORS = {"eq": eq, "gte": ge, "lte": le}
 
 
 def run_probability_experiment(
@@ -10,6 +14,8 @@ def run_probability_experiment(
     seed: int = 42,
     coin_tosses: int | None = None,
     heads_probability: float | None = None,
+    event_operator: str | None = None,
+    event_value: int | None = None,
 ) -> dict:
     """Simulate binomial heads counts or two-dice sums without changing global randomness."""
     if experiment not in ("coin_heads", "dice_sum"):
@@ -47,10 +53,32 @@ def run_probability_experiment(
             "Theory counts the 36 equally likely ordered pairs of two independent fair dice. "
             "A sum of 7 occurs in six pairs, so its theoretical probability is 1/6. "
         )
+    event = None
+    matching_outcomes = set()
+    if event_operator is not None or event_value is not None:
+        if not isinstance(event_operator, str) or event_operator not in EVENT_OPERATORS:
+            raise ValueError("Choose an event operator: eq, gte, or lte.")
+        if type(event_value) is not int or event_value not in outcomes:
+            raise ValueError(f"The event cutoff must be an integer from {outcomes.start} to {outcomes.stop - 1}.")
+        matches = EVENT_OPERATORS[event_operator]
+        matching_outcomes = {outcome for outcome in outcomes if matches(outcome, event_value)}
+        theoretical_probability = (
+            1.0 if matching_outcomes == set(outcomes)
+            else min(1.0, math.fsum(theoretical[outcome] for outcome in matching_outcomes))
+        )
+        event = {
+            "operator": event_operator,
+            "value": event_value,
+            "outcomes": sorted(matching_outcomes),
+            "theoretical_probability": theoretical_probability,
+            "convergence": [],
+        }
+
     rng = random.Random(seed)
     counts = dict.fromkeys(outcomes, 0)
     convergence = []
     total = 0
+    event_count = 0
     interval = math.ceil(trials / 100)
     for trial in range(1, trials + 1):
         if experiment == "coin_heads":
@@ -59,16 +87,24 @@ def run_probability_experiment(
             outcome = rng.randint(1, 6) + rng.randint(1, 6)
         counts[outcome] += 1
         total += outcome
+        if outcome in matching_outcomes:
+            event_count += 1
         if trial == 1 or trial % interval == 0 or trial == trials:
             convergence.append({"trial": trial, "observed_mean": total / trial,
                                 "theoretical_mean": theoretical_mean})
+            if event is not None:
+                event["convergence"].append({
+                    "trial": trial,
+                    "observed_probability": event_count / trial,
+                    "theoretical_probability": event["theoretical_probability"],
+                })
     distribution = [
         {"outcome": outcome, "count": counts[outcome],
          "observed_probability": counts[outcome] / trials,
          "theoretical_probability": theoretical[outcome]}
         for outcome in outcomes
     ]
-    return {
+    result = {
         "experiment": experiment, "title": title, "parameters": parameters,
         "distribution": distribution, "convergence": convergence,
         "summary": {
@@ -82,3 +118,7 @@ def run_probability_experiment(
             "every gap decrease, and the cumulative mean need not approach theory monotonically."
         ),
     }
+    if event is not None:
+        event.update(count=event_count, observed_probability=event_count / trials)
+        result["event"] = event
+    return result
