@@ -11,7 +11,7 @@ from worker.generic_worker import GenericWorker
 @pytest.mark.asyncio
 async def test_generic_worker_text2sql() -> None:
     skill = Path(
-        "skills/text2sql.md"
+        "vault/skills/data/text2sql/text2sql.md"
     ).read_text(
         encoding="utf-8"
     )
@@ -42,7 +42,7 @@ async def test_generic_worker_text2sql() -> None:
 @pytest.mark.asyncio
 async def test_generic_worker_web_search() -> None:
     skill = Path(
-        "skills/web_search.md"
+        "vault/skills/research/web-search/web-search.md"
     ).read_text(
         encoding="utf-8"
     )
