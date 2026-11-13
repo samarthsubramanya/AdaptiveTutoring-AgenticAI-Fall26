@@ -284,3 +284,12 @@ Both skills reuse the allowlisted mathematical parser; student expressions are
 never executed. Unsupported expressions are ungraded. Verification establishes
 numeric answers or complete solution sets, not student mastery or proof quality.
 Streamlit and its existing session endpoints remain available.
+
+## React learning studio (separate frontend)
+
+The new `frontend/` workspace adds a responsive React + TypeScript interface for
+verified practice, research, and a browser-local practice journal. It preserves
+the existing Streamlit app. Install dependencies with `npm --prefix frontend ci`,
+then run `./start-studio.sh` from the repository root. Setup, port overrides,
+production routing, and feature boundaries are documented in
+[frontend/README.md](frontend/README.md).

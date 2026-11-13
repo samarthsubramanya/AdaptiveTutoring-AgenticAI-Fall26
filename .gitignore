@@ -23,3 +23,7 @@ ratelimit.json
 audit.jsonl
 .env*
 !.env.example
+
+# React learning studio build output
+frontend/dist/
+frontend/*.tsbuildinfo

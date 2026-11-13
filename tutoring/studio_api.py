@@ -20,7 +20,7 @@ class StatisticsAnswer(StatisticsSpec):
 @router.get("/skills")
 def skills():
     return [
-        {"id": "algebra", "title": "Algebra", "description": "Build confidence, one equation at a time.", "kind": "Guided practice", "topics": ["Equations", "Factoring", "Derivatives"]},
+        {"id": "algebra", "title": "Algebra", "description": "Build confidence, one equation at a time.", "kind": "Guided practice", "topics": ["Equations", "Hints", "Guided practice"]},
         {"id": "inequalities", "title": "Inequalities", "description": "Discover the whole set of possibilities.", "kind": "Visual practice", "topics": ["Linear", "Quadratic", "Intervals"]},
         {"id": "statistics", "title": "Statistics", "description": "Find the story inside your numbers.", "kind": "Data lab", "topics": ["Center", "Spread", "Population & sample"]},
     ]
