@@ -53,9 +53,15 @@ the existing MCP server and model configuration are running.
    [95% Wilson interval](https://www.itl.nist.gov/div898/handbook/prc/section2/prc241.htm)
    estimates the event probability from the sample. Its confidence level
    describes the method's coverage over repeated samples.
-6. Switch to coins, try a biased coin, and compare the mean with `np`.
-7. Download the run to inspect its settings, counts, probabilities, sampled
-   cumulative means, and event results when selected.
+6. Open **Compare sample sizes** and select 100 trials. For the same dice
+   run, the first 100 trials give 28.00% with a 17.35 percentage point
+   interval width. All 1,000 trials give 30.00% with a width of 5.67 points.
+   In this run, the interval narrows while the observed rate moves farther
+   from the theoretical 27.78%.
+7. Switch to coins, try a biased coin, and compare the mean with `np`.
+8. Download the run to inspect its settings, counts, probabilities, and
+   cumulative estimates. Event checkpoints include their hit counts and
+   confidence intervals.
 
 API example:
 

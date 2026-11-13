@@ -157,6 +157,7 @@ def test_event_chart_and_export_follow_the_run_as_event_settings_change(probabil
     assert any("Observed in 3 of 8 trials" in item.value for item in app.caption)
     assert any("Matched outcomes · 2" == item.value for item in app.caption)
     assert exports[-1]["event"] == COIN_EVENT
+    assert not any(widget.key == "probability_compare_trial" for widget in app.selectbox)
 
     app.selectbox(key="probability_event_condition").select("At most")
     app.number_input(key=cutoff).set_value(1).run()
@@ -170,6 +171,66 @@ def test_event_chart_and_export_follow_the_run_as_event_settings_change(probabil
     assert "event_value" not in calls[-1][1]
     assert "event" not in exports[-1]
     assert len(app.get("vega_lite_chart")) == 2
+
+
+def test_compare_checkpoints_locally_and_reset_when_a_new_run_replaces_them(monkeypatch):
+    calls = []
+
+    def checkpoint(trials, count, lower, upper):
+        return {
+            "trial": trials,
+            "count": count,
+            "observed_probability": count / trials,
+            "theoretical_probability": 0.25,
+            "confidence_interval": {"level": 0.95, "lower": lower, "upper": upper},
+        }
+
+    def post(url, *, json, timeout):
+        trials = json["trials"]
+        calls.append(trials)
+        result = example_result(json["experiment"])
+        result["parameters"]["trials"] = trials
+        points = [checkpoint(1, 0, 0.0, 0.7935)]
+        if trials == 8:
+            points.extend([checkpoint(4, 2, 0.1500, 0.8500), checkpoint(8, 3, 0.1368, 0.6943)])
+        elif trials == 3:
+            points.extend([checkpoint(2, 1, 0.0945, 0.9055), checkpoint(3, 1, 0.0615, 0.7923)])
+        result["event"] = {**COIN_EVENT, **points[-1], "convergence": points}
+        return httpx.Response(200, json=result, request=httpx.Request("POST", url))
+
+    monkeypatch.setattr(httpx, "post", post)
+    app = AppTest.from_file(str(PAGE), default_timeout=15).run()
+    app.checkbox(key="probability_track_event").check().run()
+    trials = app.number_input(key="probability_trials")
+    trials.set_value(8)
+    run(app)
+
+    compare_key = "probability_compare_trial"
+    assert app.selectbox(key=compare_key).value == 1
+    app.selectbox(key=compare_key).select(4).run()
+    assert calls == [8]
+    comparison = app.table[0].value.to_dict("list")
+    assert comparison == {
+        "Measure": ["Event hits", "Observed rate", "Difference from theory (pp)",
+                    "95% Wilson interval", "Interval width (pp)"],
+        "Earlier · 4 trials": ["2", "50.00%", "+25.00", "15.00% to 85.00%", "70.00"],
+        "Full run · 8 trials": ["3", "37.50%", "+12.50", "13.68% to 69.43%", "55.75"],
+    }
+
+    app.number_input(key="probability_trials").set_value(3)
+    assert calls == [8]
+    assert app.selectbox(key=compare_key).value == 4
+    assert app.table[0].value.columns.tolist() == ["Measure", "Earlier · 4 trials", "Full run · 8 trials"]
+    run(app)
+    assert calls == [8, 3]
+    assert app.selectbox(key=compare_key).value == 1
+    assert app.table[0].value.columns.tolist() == ["Measure", "Earlier · 1 trial", "Full run · 3 trials"]
+
+    app.number_input(key="probability_trials").set_value(1)
+    run(app)
+    assert calls == [8, 3, 1]
+    assert not any(widget.key == compare_key for widget in app.selectbox)
+    assert compare_key not in app.session_state
 
 
 def test_coin_event_cutoff_validates_against_submitted_toss_count(probability_api):

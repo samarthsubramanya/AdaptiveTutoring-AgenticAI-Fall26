@@ -16,6 +16,7 @@ EVENT_SYMBOLS = {"eq": "=", "gte": "≥", "lte": "≤"}
 
 def clear_result():
     st.session_state.probability_result = None
+    st.session_state.pop("probability_compare_trial", None)
 
 
 def run_experiment(parameters):
@@ -42,6 +43,42 @@ def run_experiment(parameters):
     except ValueError:
         st.error("The probability service returned an unexpected response. Check API_BASE_URL and restart the API.")
     return None
+
+
+@st.fragment
+def compare_sample_sizes(event, trials):
+    earlier = {
+        point["trial"]: point
+        for point in event["convergence"]
+        if point["trial"] < trials and "count" in point and "confidence_interval" in point
+    }
+    if not earlier:
+        return
+
+    sizes = sorted(earlier)
+    default = min(sizes, key=lambda size: abs(size - trials / 10))
+    with st.expander("Compare sample sizes"):
+        st.caption("The earlier sample is the first set of trials from this same run. As trials accumulate, the observed rate can move closer to or farther from theory.")
+        selected = st.selectbox(
+            "Earlier sample (trials)", sizes, index=sizes.index(default), key="probability_compare_trial",
+        )
+        theory = event["theoretical_probability"]
+        interval_level = event["confidence_interval"]["level"]
+        comparison = {"Measure": [
+            "Event hits", "Observed rate", "Difference from theory (pp)",
+            f"{interval_level:.0%} Wilson interval", "Interval width (pp)",
+        ]}
+        for label, size, sample in (("Earlier", selected, earlier[selected]), ("Full run", trials, event)):
+            observed = sample["observed_probability"]
+            lower = sample["confidence_interval"]["lower"]
+            upper = sample["confidence_interval"]["upper"]
+            unit = "trial" if size == 1 else "trials"
+            comparison[f"{label} · {size:,} {unit}"] = [
+                f"{sample['count']:,}", f"{observed:.2%}", f"{100 * (observed - theory):+.2f}",
+                f"{lower:.2%} to {upper:.2%}", f"{100 * (upper - lower):.2f}",
+            ]
+        st.table(comparison, hide_index=True, border="horizontal")
+        st.caption(f"Difference is the observed rate minus {theory:.2%} theory, in percentage points.")
 
 
 st.set_page_config(page_title="Probability Lab · KernelAI", page_icon="🎲", layout="centered")
@@ -144,6 +181,7 @@ if event is not None:
         x="Trial", y=["Observed rate", "Theoretical probability"],
         x_label="Completed trials", y_label="Event probability (%)",
     )
+    compare_sample_sizes(event, actual["trials"])
 
 summary = result["summary"]
 observed_column, expected_column = st.columns(2)
