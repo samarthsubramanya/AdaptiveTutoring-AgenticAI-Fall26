@@ -42,6 +42,17 @@ def example_result(experiment):
     }
 
 
+COIN_EVENT = {
+    "operator": "gte", "value": 2, "outcomes": [2], "count": 3,
+    "observed_probability": 0.375, "theoretical_probability": 0.25,
+    "convergence": [
+        {"trial": 1, "observed_probability": 0.0, "theoretical_probability": 0.25},
+        {"trial": 8, "observed_probability": 0.375, "theoretical_probability": 0.25},
+    ],
+    "confidence_interval": {"level": 0.95, "lower": 0.1368, "upper": 0.6943},
+}
+
+
 @pytest.fixture
 def probability_api(monkeypatch):
     calls, exports = [], []
@@ -49,7 +60,10 @@ def probability_api(monkeypatch):
     def post(url, *, json, timeout):
         assert timeout == 10.0
         calls.append((url, deepcopy(json)))
-        return httpx.Response(200, json=example_result(json["experiment"]), request=httpx.Request("POST", url))
+        result = example_result(json["experiment"])
+        if "event_operator" in json:
+            result["event"] = COIN_EVENT
+        return httpx.Response(200, json=result, request=httpx.Request("POST", url))
 
     original_download = st.download_button
 
@@ -120,6 +134,60 @@ def test_switching_to_dice_clears_results_and_omits_coin_parameters(probability_
     assert len(app.get("vega_lite_chart")) == 2
     assert exports[-1] == example_result("dice_sum")
     assert any("Mean units: sum per trial" in item.value for item in app.caption)
+
+
+def test_event_chart_and_export_follow_the_run_as_event_settings_change(probability_api):
+    calls, exports = probability_api
+    app = AppTest.from_file(str(PAGE), default_timeout=15).run()
+    app.checkbox(key="probability_track_event").check().run()
+    assert not calls
+    app.number_input(key="probability_trials").set_value(8)
+    app.slider(key="probability_coin_tosses").set_value(2)
+    app.selectbox(key="probability_event_condition").select("At least")
+    cutoff = "probability_event_value_coin_heads"
+    app.number_input(key=cutoff).set_value(2)
+    run(app)
+
+    assert calls[-1][1]["event_operator"] == "gte"
+    assert calls[-1][1]["event_value"] == 2
+    assert [metric.value for metric in app.metric][:2] == ["37.50%", "25.00%"]
+    assert len(app.get("vega_lite_chart")) == 3
+    assert any(item.value == "**Heads ≥ 2**" for item in app.markdown)
+    assert any("95% confidence interval (Wilson)" in item.value for item in app.markdown)
+    assert any("Observed in 3 of 8 trials" in item.value for item in app.caption)
+    assert any("Matched outcomes · 2" == item.value for item in app.caption)
+    assert exports[-1]["event"] == COIN_EVENT
+
+    app.selectbox(key="probability_event_condition").select("At most")
+    app.number_input(key=cutoff).set_value(1).run()
+    assert len(calls) == 1
+    assert any(item.value == "**Heads ≥ 2**" for item in app.markdown)
+    assert exports[-1]["event"] == COIN_EVENT
+
+    app.checkbox(key="probability_track_event").uncheck().run()
+    run(app)
+    assert "event_operator" not in calls[-1][1]
+    assert "event_value" not in calls[-1][1]
+    assert "event" not in exports[-1]
+    assert len(app.get("vega_lite_chart")) == 2
+
+
+def test_coin_event_cutoff_validates_against_submitted_toss_count(probability_api):
+    calls, exports = probability_api
+    app = AppTest.from_file(str(PAGE), default_timeout=15).run()
+    app.checkbox(key="probability_track_event").check().run()
+    app.slider(key="probability_coin_tosses").set_value(2)
+    app.number_input(key="probability_event_value_coin_heads").set_value(3)
+    run(app)
+
+    assert not calls
+    assert not exports
+    assert app.error[0].value == "Choose a heads cutoff from 0 to 2 for this run."
+    assert app.session_state["probability_result"] is None
+
+    app.selectbox(key="probability_experiment").select("Sum of two fair dice").run()
+    dice_cutoff = app.number_input(key="probability_event_value_dice_sum")
+    assert (dice_cutoff.min, dice_cutoff.max, dice_cutoff.value) == (2, 12, 7)
 
 
 @pytest.mark.parametrize("failure,message", [

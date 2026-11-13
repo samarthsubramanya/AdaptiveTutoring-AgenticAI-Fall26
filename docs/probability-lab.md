@@ -45,16 +45,24 @@ the existing MCP server and model configuration are running.
 1. Run 100 dice trials and inspect the observed distribution alongside theory.
 2. Repeat the same settings and seed to reproduce the result.
 3. Change the seed to see sampling variation, then increase the trial count.
-4. Switch to coins, try a biased coin, and compare the mean with `np`.
-5. Download a run to inspect its parameters, counts, probabilities, and sampled
-   cumulative means. The export contains the actual simulated run.
+4. Enable **Track an event**, select **At least**, and set the dice sum cutoff
+   to 9. The matching sums are 9 through 12, with theoretical probability
+   `(4 + 3 + 2 + 1) / 36 = 27.78%`. With 1,000 trials and seed 42, 300 trials
+   meet the condition, giving an observed rate of 30.00%.
+5. Read the chart to see the observed event rate as trials accumulate. The
+   [95% Wilson interval](https://www.itl.nist.gov/div898/handbook/prc/section2/prc241.htm)
+   estimates the event probability from the sample. Its confidence level
+   describes the method's coverage over repeated samples.
+6. Switch to coins, try a biased coin, and compare the mean with `np`.
+7. Download the run to inspect its settings, counts, probabilities, sampled
+   cumulative means, and event results when selected.
 
 API example:
 
 ```sh
 curl http://127.0.0.1:8000/math/probability/experiments \
   -H 'Content-Type: application/json' \
-  -d '{"experiment":"dice_sum","trials":1000,"seed":42}'
+  -d '{"experiment":"dice_sum","trials":1000,"seed":42,"event_operator":"gte","event_value":9}'
 ```
 
 Runs are bounded to 10,000 trials and 20 tosses per coin trial. The seed controls

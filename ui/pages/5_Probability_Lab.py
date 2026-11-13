@@ -10,6 +10,8 @@ import streamlit as st
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 EXPERIMENTS = {"Coin heads": "coin_heads", "Sum of two fair dice": "dice_sum"}
+EVENT_OPERATORS = {"Exactly": "eq", "At least": "gte", "At most": "lte"}
+EVENT_SYMBOLS = {"eq": "=", "gte": "≥", "lte": "≤"}
 
 
 def clear_result():
@@ -55,6 +57,7 @@ experiment_name = st.selectbox(
     "Experiment", list(EXPERIMENTS), key="probability_experiment", on_change=clear_result,
 )
 experiment = EXPERIMENTS[experiment_name]
+track_event = st.checkbox("Track an event", key="probability_track_event")
 
 with st.form("probability_settings"):
     trial_column, seed_column = st.columns(2)
@@ -77,12 +80,30 @@ with st.form("probability_settings"):
         st.caption("One trial counts the heads in this many independent coin tosses.")
     else:
         st.caption("One trial rolls two independent, fair six-sided dice and adds their faces.")
+    if track_event:
+        condition_column, cutoff_column = st.columns(2)
+        condition = condition_column.selectbox(
+            "Event condition", list(EVENT_OPERATORS), key="probability_event_condition",
+        )
+        coin = experiment == "coin_heads"
+        cutoff = cutoff_column.number_input(
+            "Heads cutoff" if coin else "Dice sum cutoff",
+            min_value=0 if coin else 2, max_value=20 if coin else 12,
+            value=1 if coin else 7, step=1, key=f"probability_event_value_{experiment}",
+        )
+        if coin:
+            st.caption("The heads cutoff can be at most the number of tosses per trial.")
+        parameters["event_operator"] = EVENT_OPERATORS[condition]
+        parameters["event_value"] = cutoff
     submitted = st.form_submit_button("Run experiment", type="primary")
 
 if submitted:
     clear_result()
-    with st.spinner("Running experiment…"):
-        st.session_state.probability_result = run_experiment(parameters)
+    if track_event and experiment == "coin_heads" and cutoff > parameters["coin_tosses"]:
+        st.error(f"Choose a heads cutoff from 0 to {parameters['coin_tosses']} for this run.")
+    else:
+        with st.spinner("Running experiment…"):
+            st.session_state.probability_result = run_experiment(parameters)
 
 result = st.session_state.probability_result
 if result is None:
@@ -96,6 +117,33 @@ if result["experiment"] == "coin_heads":
     settings += f" · {actual['coin_tosses']} tosses per trial · P(heads) = {actual['heads_probability']:g}"
 st.caption("Displayed run: " + settings)
 st.caption("Edit the settings and run again to replace these results.")
+
+event = result.get("event")
+if event is not None:
+    st.subheader("Event probability")
+    outcome = "Heads" if result["experiment"] == "coin_heads" else "Dice sum"
+    st.write(f"**{outcome} {EVENT_SYMBOLS[event['operator']]} {event['value']}**")
+    st.caption("Matched outcomes · " + ", ".join(map(str, event["outcomes"])))
+    observed_event, theoretical_event = st.columns(2)
+    observed_event.metric("Observed event rate", f"{event['observed_probability']:.2%}")
+    theoretical_event.metric("Theoretical event probability", f"{event['theoretical_probability']:.2%}")
+    st.caption(f"Observed in {event['count']:,} of {actual['trials']:,} trials.")
+    interval = event["confidence_interval"]
+    st.write(
+        f"**{interval['level']:.0%} confidence interval (Wilson)** "
+        f"· {interval['lower']:.2%} to {interval['upper']:.2%}"
+    )
+    st.caption("The interval estimates the event probability from the observed hits. The 95% level refers to coverage across repeated samples.")
+    event_convergence = pd.DataFrame(event["convergence"])
+    st.line_chart(
+        pd.DataFrame({
+            "Trial": event_convergence["trial"],
+            "Observed rate": 100 * event_convergence["observed_probability"],
+            "Theoretical probability": 100 * event_convergence["theoretical_probability"],
+        }),
+        x="Trial", y=["Observed rate", "Theoretical probability"],
+        x_label="Completed trials", y_label="Event probability (%)",
+    )
 
 summary = result["summary"]
 observed_column, expected_column = st.columns(2)
