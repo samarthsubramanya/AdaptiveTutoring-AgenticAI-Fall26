@@ -110,8 +110,10 @@ def run_probability_experiment(
             if event is not None:
                 event["convergence"].append({
                     "trial": trial,
+                    "count": event_count,
                     "observed_probability": event_count / trial,
                     "theoretical_probability": event["theoretical_probability"],
+                    "confidence_interval": _wilson_interval(event_count, trial),
                 })
     distribution = [
         {"outcome": outcome, "count": counts[outcome],
@@ -134,10 +136,11 @@ def run_probability_experiment(
         ),
     }
     if event is not None:
+        final_sample = event["convergence"][-1]
         event.update(
-            count=event_count,
-            observed_probability=event_count / trials,
-            confidence_interval=_wilson_interval(event_count, trials),
+            count=final_sample["count"],
+            observed_probability=final_sample["observed_probability"],
+            confidence_interval=final_sample["confidence_interval"],
         )
         result["event"] = event
     return result

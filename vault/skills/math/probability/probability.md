@@ -15,6 +15,10 @@ theoretical probability as the sum of the probabilities of matching outcomes.
 The 95% Wilson confidence interval estimates the underlying event probability
 from the simulated hits and trial count. The theoretical probability is already
 known under the model. Explain that 95% refers to long-run coverage of the method.
+To compare sample sizes, use an earlier and a later point in the event's
+convergence series. Each point gives the hit count and confidence interval for
+the first `trial` trials of the same run. Compare interval widths separately
+from how close the observed estimates are to theory.
 
 Preserve the user's requested settings. Ask for clarification if their random
 experiment differs from these assumptions. Use a stated seed to reproduce a run.

@@ -131,8 +131,20 @@ def test_dice_event_uses_the_same_trials_as_the_distribution():
     ]
     for point in event["convergence"]:
         trial = point["trial"]
-        assert point["observed_probability"] == sum(roll >= 9 for roll in rolls[:trial]) / trial
+        hits = sum(roll >= 9 for roll in rolls[:trial])
+        assert point["count"] == hits
+        assert point["observed_probability"] == hits / trial
         assert point["theoretical_probability"] == pytest.approx(10 / 36)
+        interval = point["confidence_interval"]
+        assert 0 <= interval["lower"] <= hits / trial <= interval["upper"] <= 1
+
+    earlier = next(point for point in event["convergence"] if point["trial"] == 100)
+    prefix = run_probability_experiment(
+        **{**settings, "trials": 100}, event_operator="gte", event_value=9,
+    )["event"]
+    assert earlier["count"] == prefix["count"]
+    assert earlier["confidence_interval"] == prefix["confidence_interval"]
+    assert event["convergence"][-1]["confidence_interval"] == event["confidence_interval"]
 
 
 @pytest.mark.parametrize("operator,cutoff,outcomes,probability", [

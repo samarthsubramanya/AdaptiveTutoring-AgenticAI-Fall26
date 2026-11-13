@@ -66,6 +66,11 @@ def test_event_settings_reach_the_simulation():
     event = response.json()["event"]
     assert event["count"] == 300
     assert event["theoretical_probability"] == pytest.approx(10 / 36)
+    earlier = next(point for point in event["convergence"] if point["trial"] == 100)
+    assert earlier["count"] == 28
+    assert earlier["confidence_interval"] == pytest.approx({
+        "level": 0.95, "lower": 0.20139685, "upper": 0.37488029,
+    })
     for invalid in ({"event_value": True}, {"event_value": 1}, {"event_operator": None}):
         assert client.post(URL, json={**body, **invalid}).status_code == 422
 
