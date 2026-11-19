@@ -40,6 +40,14 @@ Use `statistics` to check mean, median, range, variance, or standard deviation o
 explicit observations. Ask whether population or sample is intended for variance
 and standard deviation. Do not use web search for deterministic numeric grading.
 
+### linear_systems
+
+Use `linear_systems` to solve two numeric linear equations in x and y or to
+check a student's proposed pair. Preserve the original coefficients and answer.
+Let the deterministic tools establish correctness; do not infer grades from
+model prose. Ask the user to confirm ambiguous word-problem translations.
+For practice with hints and worked elimination, suggest the Linear Systems page.
+
 ### text2sql
 
 Use `text2sql` for work that requires querying or analyzing information

@@ -290,3 +290,9 @@ the existing Streamlit app. Install dependencies with `npm --prefix frontend ci`
 then run `./start-studio.sh` from the repository root. Setup, port overrides,
 production routing, and feature boundaries are documented in
 [frontend/README.md](frontend/README.md).
+
+## Math practice (work in progress)
+
+Two-variable linear-system practice includes exact answer checking, hints, and
+worked elimination steps. See [the math demo](docs/math-linear-systems.md) for
+setup, examples, and current scope.
