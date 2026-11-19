@@ -83,6 +83,15 @@ SKILLS: dict[str, Skill] = {
         path=SKILLS_DIR / "linear_systems.md",
         allowed_tools={"solve_linear_system", "check_linear_system_answer"},
     ),
+    "probability": Skill(
+        name="probability",
+        description=(
+            "Explore coin and dice probability through reproducible simulations, "
+            "theoretical distributions, and sampling-variation comparisons."
+        ),
+        path=SKILLS_DIR.parent / "vault/skills/math/probability/probability.md",
+        allowed_tools={"run_probability_experiment"},
+    ),
 }
 
 

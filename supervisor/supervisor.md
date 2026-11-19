@@ -48,6 +48,14 @@ Let the deterministic tools establish correctness; do not infer grades from
 model prose. Ask the user to confirm ambiguous word-problem translations.
 For practice with hints and worked elimination, suggest the Linear Systems page.
 
+### probability
+
+Use `probability` for simulated coin-toss and dice-sum experiments, theoretical
+distributions, and questions about sampling variation. Preserve the experiment
+settings and distinguish simulated observations from theoretical predictions.
+For interactive charts and exported run data, suggest the Probability Lab page.
+
+
 ### text2sql
 
 Use `text2sql` for work that requires querying or analyzing information
