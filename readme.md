@@ -20,7 +20,7 @@ KernelAI is an agentic runtime that turns a user request into independently sche
 Use macOS or Linux, or a Bash-capable environment such as WSL on Windows. Install:
 
 - Git.
-- **Python 3.11 or newer**, including `venv` and `pip`. The setup below was verified with Python 3.14.10 on macOS; make sure `python3 --version` reports a supported version.
+- **Python 3.11 to 3.14**, including `venv` and `pip`. The setup below was verified with Python 3.14.10 on macOS; on Python 3.15 the `pyarrow` dependency failed to build. Make sure `python3 --version` reports a supported version.
 - Bash and `curl`, used by `start.sh`.
 - Access to an OpenAI-compatible LLM endpoint and its API key for general agent/chat, learning, and LLM-assisted algebra requests. Configure all three `ASU_LLM_*` values in `.env`. The supplied template targets the ASU gateway.
 - A running PostgreSQL database and connection credentials **if using `text2sql`**. Web-only requests do not require a database. There is no bundled database server, schema migration, or seed dataset.
@@ -46,7 +46,7 @@ python -m pip install -r requirements.txt
 python -m pip check
 ```
 
-If your default `python3` is older than 3.11, substitute a supported interpreter, for example `python3.14 -m venv .venv`. The launcher expects the environment to be named `.venv` in the repository root and activates it automatically.
+If your default `python3` is outside that range, substitute a supported interpreter, for example `python3.14 -m venv .venv`. The launcher expects the environment to be named `.venv` in the repository root and activates it automatically.
 
 ### 4. Configure the environment
 
@@ -64,9 +64,6 @@ ASU_LLM_MODEL=glm-5-3-flash
 MCP_SERVER_URL=http://localhost:8001/mcp
 KERNELAI_AGENT=generic
 SHELL_WORKSPACE=/absolute/path/to/kernelai-workspace
-
-# Required only for database-backed requests:
-DATABASE_URL=postgresql://username:password@localhost:5432/database_name
 ```
 
 | Setting | Purpose |
@@ -77,11 +74,10 @@ DATABASE_URL=postgresql://username:password@localhost:5432/database_name
 | `MCP_SERVER_URL` | MCP endpoint used by task workers. |
 | `KERNELAI_AGENT` | Keep `generic`; it is the implemented agent backend. |
 | `SHELL_WORKSPACE` | Existing directory used as the shell tool's workspace. |
-| `DATABASE_URL` | PostgreSQL connection string used by `asyncpg`; provision your own database/schema. |
 
-The backend loads `.env` automatically. Keep credentials in the ignored `.env` file. The template also contains `KERNELAI_VAULT_PATH`, but the current runtime does not read it; changing it does not register the vault's coding or teaching skills. The startup script sets `API_BASE_URL` for the UI automatically.
+The backend loads `.env` automatically. Keep credentials in the ignored `.env` file. The template also contains `KERNELAI_VAULT_PATH`, but the current runtime does not read it. `skills/registry.py` registers the `web_search` prompts from fixed paths under `vault/skills/`; changing the variable does not register the vault's coding or teaching skills. The startup script sets `API_BASE_URL` for the UI automatically.
 
-For database requests, use tables that actually exist in your database. Prompts and integration tests mentioning `customers`, `products`, or `orders` assume those tables have been provisioned externally.
+ Prompts and integration tests mentioning `customers`, `products`, or `orders` assume those tables have been provisioned externally. We also have placeholders for database access to provide knowledge from database sets of questions, However, it has not been validated yet. This would allow for private questions and datasets to be used for answering queries.
 
 ### 5. Start KernelAI
 
@@ -213,6 +209,8 @@ curl --fail -X POST http://127.0.0.1:8000/tutoring/sessions/YOUR_SESSION_ID/answ
 
 Use the returned `revision` for the next action. The API rejects stale revisions or a different problem ID with HTTP 409, so retries cannot silently grade the wrong problem. The `/docs` page lists all `/tutoring` routes, including hints, next problem, session retrieval, and deletion. Client-supplied grade fields are rejected.
 
+Re-verified on November 8, 2026 with macOS and Python 3.14.10 from a fresh clone: dependency install, `pip check`, the 11 selected local tests, launcher startup, API/UI health checks, loading of both registered skill prompts from `vault/skills/`, and one credentialed web-search request that completed through the Supervisor and `web_search` skill. PostgreSQL queries and a full learning cycle were not exercised.
+
 ## Offline learning
 
 Application execution appends production events to `learning/data/traces/production/runtime.jsonl`. The learning dashboard reads trace volume, configuration, evaluation history, policies, candidates, and releases.
@@ -243,7 +241,6 @@ The built-in workload includes database questions as well as web research. Confi
 | Missing packages or incompatible Python | Activate `.venv`, check `python --version`, reinstall `requirements.txt`, and run `python -m pip check`. |
 | Missing `ASU_LLM_*` variables or model authentication errors | Fill all three settings in `.env` and confirm the endpoint/model are available to your account. |
 | Tool connection fails | Confirm MCP is running and `MCP_SERVER_URL` ends in `/mcp` on port 8001. |
-| `DATABASE_URL` missing or SQL relation does not exist | Add the connection string and provision the requested tables in PostgreSQL. |
 | Shell workspace error | Replace `workspace_path` from the template with the absolute path of an existing directory. |
 | Address already in use | Stop the process occupying 8000, 8001, or 8501, then restart the launcher. |
 | UI startup stalls at an email prompt | Use `STREAMLIT_SERVER_HEADLESS=true bash start.sh`. |
@@ -256,7 +253,7 @@ Most other tests under `tests/` are live integration tests. They may require hos
 |---|---|
 | `orchestrator/` | Request admission and lifecycle coordination. |
 | `supervisor/`, `tasks/`, `worker/` | Delegation, task execution, model/tool clients, and agent runtime. |
-| `mcp_server/`, `skills/`, `vault/` | Tools, production skill registry, and additional skill documents. |
+| `mcp_server/`, `skills/`, `vault/` | Tools, the skill registry (`skills/registry.py`), and skill documents, including the registered `web_search`  prompts. |
 | `observability/` | Events, sanitization, sinks, and frontend projections. |
 | `tutoring/` | Trusted algebra bank, exact verification, in-memory sessions, and tutoring API routes. |
 | `api/`, `ui/`, `.streamlit/`, `start.sh` | HTTP API, chat/dashboard pages, theme, and service launcher. |
