@@ -31,3 +31,10 @@ or that a random event becomes due after a streak. No live physical experiment
 or student-learning evaluation is performed by this tool.
 
 For charts, settings, and downloadable run data, direct users to Probability Lab.
+
+
+## Connections
+
+- [[skills/math/DOMAIN|Mathematics]]
+- [[skills/math/statistics/statistics|Descriptive statistics]]
+- [[skills/teaching/transfer-bridge/transfer-bridge|Transfer to another setting]]

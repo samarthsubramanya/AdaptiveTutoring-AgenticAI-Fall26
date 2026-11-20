@@ -20,6 +20,10 @@ Retrieving current or external information and turning it into an answer scoped 
 
 Answering questions from structured data held in a connected relational database.
 
+### [[skills/math/DOMAIN|mathematics]]
+
+Verified mathematics practice, symbolic checking, inequalities, statistics, geometry, linear systems, probability experiments, and server-controlled interactive tutoring. Pair with teaching when the objective is learning.
+
 ## Routing Principle
 
 Choose only domains genuinely required by the Task.
