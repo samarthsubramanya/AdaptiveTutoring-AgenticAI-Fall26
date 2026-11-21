@@ -12,6 +12,8 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
+from api.probability import router as probability_router
+
 from learning.config.loader import load_learning_config
 from learning.evaluation.loader import (
     get_trace_directory,
@@ -42,6 +44,8 @@ app = FastAPI(
     version="0.1.0",
 )
 
+
+app.include_router(probability_router)
 
 # ============================================================
 # API models
