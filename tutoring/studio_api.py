@@ -3,6 +3,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import Field
 
+from tutoring import geometry
 from tutoring.inequalities import InequalitySpec, verify as verify_inequality
 from tutoring.statistics import StatisticsSpec, verify as verify_statistic
 
@@ -17,12 +18,17 @@ class StatisticsAnswer(StatisticsSpec):
     answer: str = Field(min_length=1, max_length=300)
 
 
+class GeometryAnswer(geometry.GeometrySpec):
+    answer: str = Field(min_length=1, max_length=120)
+
+
 @router.get("/skills")
 def skills():
     return [
         {"id": "algebra", "title": "Algebra", "description": "Build confidence, one equation at a time.", "kind": "Guided practice", "topics": ["Equations", "Hints", "Guided practice"]},
         {"id": "inequalities", "title": "Inequalities", "description": "Discover the whole set of possibilities.", "kind": "Visual practice", "topics": ["Linear", "Quadratic", "Intervals"]},
         {"id": "statistics", "title": "Statistics", "description": "Find the story inside your numbers.", "kind": "Data lab", "topics": ["Center", "Spread", "Population & sample"]},
+        {"id": "geometry", "title": "Geometry", "description": "Measure shapes and map points exactly.", "kind": "Shape lab", "topics": ["Area & perimeter", "Pythagoras", "Coordinates"]},
     ]
 
 
@@ -41,3 +47,13 @@ def inequality_check(body: InequalityAnswer):
 @router.post("/statistics/check")
 def statistics_check(body: StatisticsAnswer):
     return _checked(verify_statistic, StatisticsSpec(**body.model_dump(exclude={"answer"})), body.answer)
+
+
+@router.get("/geometry/problems")
+def geometry_problems():
+    return geometry.problems()
+
+
+@router.post("/geometry/check")
+def geometry_check(body: GeometryAnswer):
+    return _checked(geometry.verify, geometry.GeometrySpec(**body.model_dump(exclude={"answer"})), body.answer)

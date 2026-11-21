@@ -2,7 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import Icon from "./components/Icon";
 import type { IconName } from "./components/Icon";
 import { api } from "./lib/api";
-import { readHistory, saveHistory } from "./lib/storage";
+import {
+  LEARNER_ID,
+  readHistory,
+  readLearner,
+  saveHistory,
+  saveLearner,
+} from "./lib/storage";
 import type { Entry, Skill, Subject, View } from "./lib/types";
 import { useResearch } from "./hooks/useResearch";
 import Overview from "./pages/Overview";
@@ -38,12 +44,19 @@ const fallback: Skill[] = [
     kind: "Data lab",
     topics: ["Center", "Spread", "Population & sample"],
   },
+  {
+    id: "geometry",
+    title: "Geometry",
+    description: "Measure shapes and map points exactly.",
+    kind: "Shape lab",
+    topics: ["Area & perimeter", "Pythagoras", "Coordinates"],
+  },
 ];
 function route(): { view: View; subject: Subject } {
   const [v, s] = location.hash.replace("#/", "").split("/");
   return {
     view: nav.some((n) => n.view === v) ? (v as View) : "overview",
-    subject: ["algebra", "inequalities", "statistics"].includes(s)
+    subject: ["algebra", "inequalities", "statistics", "geometry"].includes(s)
       ? (s as Subject)
       : "inequalities",
   };
@@ -59,6 +72,8 @@ export default function App() {
   const [history, setHistory] = useState<Entry[]>(readHistory);
   const [undo, setUndo] = useState<Entry[] | null>(null);
   const [skills, setSkills] = useState(fallback);
+  const [learnerId, setLearnerId] = useState(readLearner);
+  const [learnerDraft, setLearnerDraft] = useState(learnerId);
   const [connected, setConnected] = useState<boolean | null>(null);
   const [storageError, setStorageError] = useState(false);
   const [healthVersion, setHealthVersion] = useState(0);
@@ -194,7 +209,7 @@ export default function App() {
             >
               <Icon name={item.icon} size={20} />
               <span>{item.label}</span>
-              {item.view === "practice" && <span className="nav-count">3</span>}
+              {item.view === "practice" && <span className="nav-count">4</span>}
               {item.view === "research" &&
                 research.id &&
                 !["completed", "failed"].includes(
@@ -233,13 +248,43 @@ export default function App() {
             <span>Open Streamlit</span>
             <Icon name="ArrowUpRight" size={15} />
           </a>
-          <div className="workspace-avatar">
-            <span>K</span>
+          <form
+            className="learner-switch"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const id = learnerDraft.trim().toLowerCase();
+              if (!LEARNER_ID.test(id)) return;
+              saveLearner(id);
+              setLearnerId(id);
+              setLearnerDraft(id);
+            }}
+          >
+            <label htmlFor="learner-id">
+              Learner ID<small>Use the same ID on any device</small>
+            </label>
             <div>
-              Your workspace<small>Space to grow</small>
+              <input
+                id="learner-id"
+                value={learnerDraft}
+                maxLength={40}
+                autoComplete="off"
+                spellCheck={false}
+                aria-invalid={
+                  !LEARNER_ID.test(learnerDraft.trim().toLowerCase())
+                }
+                onChange={(e) => setLearnerDraft(e.target.value)}
+              />
+              <button
+                aria-label="Switch learner"
+                disabled={
+                  learnerDraft.trim().toLowerCase() === learnerId ||
+                  !LEARNER_ID.test(learnerDraft.trim().toLowerCase())
+                }
+              >
+                <Icon name="Check" size={15} />
+              </button>
             </div>
-            <Icon name="Sparkles" size={18} />
-          </div>
+          </form>
         </div>
       </aside>
       <div className="main-shell">
@@ -304,6 +349,7 @@ export default function App() {
               subject={current.subject}
               setSubject={(s) => go("practice", s)}
               record={record}
+              learnerId={learnerId}
             />
           )}
           {current.view === "research" && <Research state={research} />}
@@ -312,6 +358,7 @@ export default function App() {
               history={history}
               clear={clear}
               open={(s) => go("practice", s)}
+              learnerId={learnerId}
             />
           )}
           {undo && (

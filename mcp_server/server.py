@@ -8,6 +8,8 @@ from mcp_server.tools.sql_executor import sql_executor
 from mcp_server.tools.shell import shell
 from mcp_server.tools.linear_systems import solve_linear_system, check_linear_system_answer
 from mcp_server.tools.probability import run_probability_experiment
+from mcp_server.tools.geometry import verify_geometry_answer
+from mcp_server.tools.learners import get_learner_profile, plan_learner_next_step
 
 
 mcp = MCPServer("KernelAI Tools")
@@ -17,6 +19,9 @@ mcp.tool()(verify_statistics_answer)
 mcp.tool()(solve_linear_system)
 mcp.tool()(check_linear_system_answer)
 mcp.tool()(run_probability_experiment)
+mcp.tool()(verify_geometry_answer)
+mcp.tool()(get_learner_profile)
+mcp.tool()(plan_learner_next_step)
 mcp.tool()(web_search)
 mcp.tool()(sql_executor)
 mcp.tool()(shell)

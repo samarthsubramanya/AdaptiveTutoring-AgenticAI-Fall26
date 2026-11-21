@@ -72,7 +72,7 @@ def test_invalid_statistics(values):
 
 
 def test_http_validation_and_skill_discovery():
-    assert len(client.get("/studio/skills").json()) == 3
+    assert [s["id"] for s in client.get("/studio/skills").json()] == ["algebra", "inequalities", "statistics", "geometry"]
     result = client.post("/studio/inequalities/check", json={"expression": "x^2", "relation": ">=", "rhs": "4", "answer": "(-inf, -2] U [2, inf)"})
     assert result.status_code == 200 and result.json()["status"] == "correct"
     assert result.json()["segments"] == [

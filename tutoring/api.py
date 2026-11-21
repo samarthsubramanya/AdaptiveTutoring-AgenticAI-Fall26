@@ -6,18 +6,20 @@ from typing import Literal
 
 from tutoring.algebra import DEFAULT_PROBLEM_ID, list_problems
 from tutoring.sessions import SessionConflict, SessionStore
+from tutoring.learner_api import learners
 from tutoring.custom import CaseStore
 from tutoring.model import ModelResponseInvalid, ModelUnavailable, make_hint, propose
 
 
 router = APIRouter(prefix="/tutoring", tags=["Algebra tutor"])
-sessions = SessionStore()
+sessions = SessionStore(learners=learners)
 cases = CaseStore()
 
 
 class StartSession(BaseModel):
     model_config = ConfigDict(extra="forbid")
     problem_id: str = DEFAULT_PROBLEM_ID
+    learner_id: str | None = Field(default=None, max_length=40)
 
 
 class SessionAction(BaseModel):
@@ -71,7 +73,7 @@ def problems():
 
 @router.post("/sessions", status_code=201)
 def create_session(body: StartSession):
-    return _call(sessions.create, body.problem_id)
+    return _call(sessions.create, body.problem_id, body.learner_id)
 
 
 @router.get("/sessions/{session_id}")

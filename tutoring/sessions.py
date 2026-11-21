@@ -9,6 +9,7 @@ from typing import Any
 import uuid
 
 from tutoring.algebra import DEFAULT_PROBLEM_ID, PROBLEMS, verify_answer
+from tutoring.learners import ALGEBRA_TOPIC, LearnerStore
 
 
 class SessionConflict(ValueError):
@@ -32,20 +33,25 @@ class Session:
     history: list[dict[str, Any]] = field(default_factory=list)
     feedback: str = "Try solving the equation. You can ask for a hint when you need one."
     last_verification: dict[str, Any] | None = None
+    learner_id: str | None = None
 
 
 class SessionStore:
     """Single-process demo storage: bounded sessions, turns, and idle lifetime."""
 
-    def __init__(self, max_sessions: int = 256, ttl_seconds: float = 3600) -> None:
+    def __init__(self, max_sessions: int = 256, ttl_seconds: float = 3600,
+                 learners: LearnerStore | None = None) -> None:
+        self.learners = learners
         self.max_sessions = max_sessions
         self.ttl_seconds = ttl_seconds
         self._sessions: dict[str, Session] = {}
         self._lock = RLock()
 
-    def create(self, problem_id: str = DEFAULT_PROBLEM_ID) -> dict[str, Any]:
+    def create(self, problem_id: str = DEFAULT_PROBLEM_ID, learner_id: str | None = None) -> dict[str, Any]:
         if problem_id not in PROBLEMS:
             raise ValueError("Unknown problem ID.")
+        if learner_id is not None and self.learners is not None:
+            self.learners.path(learner_id)  # validates the ID before any session exists
         with self._lock:
             now = time.monotonic()
             for key in list(self._sessions):
@@ -53,7 +59,7 @@ class SessionStore:
                     del self._sessions[key]
             if len(self._sessions) >= self.max_sessions:
                 raise SessionConflict("The demo session limit was reached. Close a session or try later.")
-            session = Session(id=str(uuid.uuid4()), problem_id=problem_id)
+            session = Session(id=str(uuid.uuid4()), problem_id=problem_id, learner_id=learner_id)
             self._sessions[session.id] = session
             self._record(session, "session_started", problem_id=problem_id)
             return self._snapshot(session)
@@ -109,6 +115,14 @@ class SessionStore:
                 session.feedback += " Show your working or request a hint; this answer alone does not identify a misconception."
                 if self._can_remediate(session):
                     session.feedback += " You can also switch to a simpler prerequisite problem."
+            if session.learner_id and self.learners is not None:
+                # Memory changes only from this verified result; the hint level syncs session help.
+                self.learners.record(session.learner_id, skill="algebra",
+                                     topic=ALGEBRA_TOPIC[PROBLEMS[problem_id].topic],
+                                     key=f"algebra:{session.id}:{problem_id}",
+                                     label=PROBLEMS[problem_id].equation, status=status,
+                                     mode="prerequisite_review" if session.return_to else "practice",
+                                     hint_level=session.hint_level)
             session.revision += 1
             self._record(session, "answer_checked", problem_id=problem_id, answer=answer,
                          attempt=session.attempts, verification=verification,

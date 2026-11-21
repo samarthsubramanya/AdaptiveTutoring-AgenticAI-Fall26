@@ -92,6 +92,45 @@ SKILLS: dict[str, Skill] = {
         path=SKILLS_DIR.parent / "vault/skills/math/probability/probability.md",
         allowed_tools={"run_probability_experiment"},
     ),
+    "geometry": Skill(
+        name="geometry",
+        description=(
+            "Check area, perimeter, Pythagoras, triangle-angle, distance, midpoint "
+            "and slope answers exactly with SymPy."
+        ),
+        path=SKILLS_DIR / "geometry.md",
+        allowed_tools={"verify_geometry_answer"},
+    ),
+    "retrieve_first_gate": Skill(
+        name="retrieve_first_gate",
+        description="Teaching: Before any help, have a returning learner recall from memory; hints open only after an unaided attempt. Pair with a math skill.",
+        path=SKILLS_DIR.parent / "vault/skills/teaching/retrieve-first-gate/retrieve-first-gate.md",
+        allowed_tools={"get_learner_profile", "plan_learner_next_step"},
+    ),
+    "progressive_hint_ladder": Skill(
+        name="progressive_hint_ladder",
+        description="Teaching: Give graduated hints (conceptual, strategic, procedural) with a short learner reflection before each escalation. Pair with a math skill.",
+        path=SKILLS_DIR.parent / "vault/skills/teaching/progressive-hint-ladder/progressive-hint-ladder.md",
+        allowed_tools={"get_learner_profile", "plan_learner_next_step"},
+    ),
+    "unassisted_evidence_checkpoint": Skill(
+        name="unassisted_evidence_checkpoint",
+        description="Teaching: After an assisted success, set a fresh hint-free problem to establish what the learner can do alone. Pair with a math skill.",
+        path=SKILLS_DIR.parent / "vault/skills/teaching/unassisted-evidence-checkpoint/unassisted-evidence-checkpoint.md",
+        allowed_tools={"get_learner_profile", "plan_learner_next_step"},
+    ),
+    "fading_manager": Skill(
+        name="fading_manager",
+        description="Teaching: Reduce support as verified unaided successes accumulate across sessions, restore it after misses, and name each change. Pair with a math skill.",
+        path=SKILLS_DIR.parent / "vault/skills/teaching/fading-manager/fading-manager.md",
+        allowed_tools={"get_learner_profile", "plan_learner_next_step"},
+    ),
+    "confidence_calibration_check": Skill(
+        name="confidence_calibration_check",
+        description="Teaching: Capture confidence before and after feedback and compare it with verified accuracy. Pair with a math skill.",
+        path=SKILLS_DIR.parent / "vault/skills/teaching/confidence-calibration-check/confidence-calibration-check.md",
+        allowed_tools={"get_learner_profile", "plan_learner_next_step"},
+    ),
 }
 
 

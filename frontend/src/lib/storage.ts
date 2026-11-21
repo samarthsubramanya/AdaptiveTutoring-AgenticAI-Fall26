@@ -8,7 +8,9 @@ export function readHistory(): Entry[] {
           .filter(
             (x): x is Entry =>
               x &&
-              ["algebra", "inequalities", "statistics"].includes(x.topic) &&
+              ["algebra", "inequalities", "statistics", "geometry"].includes(
+                x.topic,
+              ) &&
               typeof x.id === "string" &&
               typeof x.problem === "string" &&
               typeof x.answer === "string" &&
@@ -27,5 +29,26 @@ export function saveHistory(entries: Entry[]) {
     return true;
   } catch {
     return false;
+  }
+}
+const LEARNER_KEY = "kernel.learner.v1";
+export const LEARNER_ID = /^[a-z0-9][a-z0-9_-]{2,39}$/;
+/** Per-browser convenience only: the learner record itself lives on the server. */
+export function readLearner(): string {
+  try {
+    const saved = localStorage.getItem(LEARNER_KEY) || "";
+    if (LEARNER_ID.test(saved)) return saved;
+  } catch {
+    /* storage unavailable: fall through to a fresh ID */
+  }
+  const fresh = `learner-${crypto.randomUUID().slice(0, 8)}`;
+  saveLearner(fresh);
+  return fresh;
+}
+export function saveLearner(id: string) {
+  try {
+    localStorage.setItem(LEARNER_KEY, id);
+  } catch {
+    /* keep it in memory for this page only */
   }
 }

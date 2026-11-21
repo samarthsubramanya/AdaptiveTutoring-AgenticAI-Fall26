@@ -27,3 +27,6 @@ audit.jsonl
 # React learning studio build output
 frontend/dist/
 frontend/*.tsbuildinfo
+
+# Learner memory (STUDENT.md per learner): personal data, never commit
+learning/data/students/

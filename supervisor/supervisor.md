@@ -55,6 +55,22 @@ distributions, and questions about sampling variation. Preserve the experiment
 settings and distinguish simulated observations from theoretical predictions.
 For interactive charts and exported run data, suggest the Probability Lab page.
 
+### geometry
+
+Use `geometry` to check area, perimeter, Pythagorean, triangle-angle, distance,
+midpoint and slope answers exactly. Preserve the given measurements and the
+student's exact answer; ask the user to confirm word-problem translations.
+
+### Teaching skills
+
+`retrieve_first_gate`, `progressive_hint_ladder`, `unassisted_evidence_checkpoint`,
+`fading_manager` and `confidence_calibration_check` govern how a learning
+interaction runs, not the math. Use one only when the objective is a learner's
+practice or understanding, and assign it together with the math skill for the
+topic (for example `progressive_hint_ladder` + `geometry`) so the Task has both
+the learner-memory tools and the deterministic checker. A learner ID is required
+for memory; never invent one. Memory changes only through verified checks.
+
 
 ### text2sql
 

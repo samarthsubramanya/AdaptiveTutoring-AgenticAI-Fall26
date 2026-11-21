@@ -301,3 +301,44 @@ production routing, and feature boundaries are documented in
 Two-variable linear-system practice includes exact answer checking, hints, and
 worked elimination steps. See [the math demo](docs/math-linear-systems.md) for
 setup, examples, and current scope.
+
+## Geometry, learner memory and teaching skills
+
+**Geometry** (`tutoring/geometry.py`, skill `geometry`, MCP tool `verify_geometry_answer`)
+checks rectangle area/perimeter, triangle area, circle area/circumference, the
+Pythagorean theorem, the third triangle angle, and coordinate distance, midpoint
+and slope exactly with SymPy. Exact answers (`9*pi`, `3*sqrt(2)`, `7/2`, `(4, 2)`,
+`undefined`) are preferred; a decimal is accepted only if it is correctly rounded
+to its own number of places. Routes: `GET /studio/geometry/problems` (14-problem
+bank) and `POST /studio/geometry/check`.
+
+**Learner memory** (`tutoring/learners.py`, routes under `/learners`) keeps one
+`STUDENT.md` per learner ID in `learning/data/students/<id>/` (git-ignored; set
+`KERNELAI_STUDENT_DIR` to move it). YAML front matter is the source of truth; the
+Markdown body is regenerated on each write. `POST /learners/{id}/check` re-runs the
+skill's own checker on the server, so only verified correct/incorrect results
+change the record. Algebra sessions started with a `learner_id` feed the same
+record. A topic prerequisite graph links algebra, inequalities, linear systems,
+statistics and geometry.
+
+**Teaching behaviour** follows five vault teaching skills, which are also
+registered (with read-only `get_learner_profile` / `plan_learner_next_step` MCP
+tools) so the Supervisor can pair them with a math skill:
+
+| Skill | In the tutor |
+|---|---|
+| retrieve-first-gate | Returning learners recall first; no hint before an attempt. |
+| progressive-hint-ladder | Conceptual, strategic, procedural hints; a short reflection before levels 2–3. |
+| unassisted-evidence-checkpoint | An assisted success is followed by a fresh, hint-free check. |
+| fading-manager | Per-topic support fades (full, light, none) after unaided successes and returns after misses. |
+| confidence-calibration-check | Optional 1–5 ratings before and after feedback, compared with verified accuracy. |
+
+`GET /learners/{id}/plan?skill=…` returns the evidence-based next step. With fewer
+than two recent verified results it makes no claim about the learner; evidence
+older than 30 days is ignored. The React studio shows the plan, hint ladder,
+confidence ratings and learner record (Practice journal page). This is practice
+evidence, not a mastery certificate.
+
+```bash
+python -m pytest -q tests/test_geometry.py tests/test_learners.py
+```

@@ -758,7 +758,7 @@ nav a.active svg {
 }
 .subject-tabs {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 12px;
   padding-bottom: 26px;
 }
@@ -2275,4 +2275,311 @@ nav a.active svg {
 /* Main is a programmatic skip/navigation target, not an interactive control. */
 .main-content:focus {
   outline: none;
+}
+
+/* ---------- learner memory, teaching behaviour, geometry ---------- */
+.plan-banner {
+  border: 1px solid #dfe7d6;
+  border-left: 3px solid #8fb27a;
+  border-radius: 11px;
+  background: #f6f9f1;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+.plan-banner.plan-unassisted_check {
+  border-left-color: #c39b4a;
+  background: #fbf7ec;
+}
+.plan-banner.plan-prerequisite_review {
+  border-left-color: #6f8fb5;
+  background: #f2f6fa;
+}
+.plan-banner.plan-retrieve {
+  border-left-color: #9a7fb8;
+  background: #f7f4fa;
+}
+.plan-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.plan-head .eyebrow {
+  font-size: 8px;
+}
+.plan-banner h3 {
+  font: 19px/1.25 var(--serif);
+  font-weight: 400;
+  color: var(--forest);
+  margin: 8px 0 6px;
+}
+.plan-banner h3 span {
+  color: #6f8a62;
+}
+.plan-banner p {
+  font-size: 11px;
+  color: #6f7d68;
+  line-height: 1.6;
+  margin: 0 0 10px;
+}
+.support-chip {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: #4f6b45;
+  background: #e8f0de;
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+.support-chip.support-light {
+  color: #7a6230;
+  background: #f6eedb;
+}
+.support-chip.support-none {
+  color: #fff;
+  background: #2c6c4d;
+}
+.mode-chip {
+  display: inline-block;
+  margin: 4px 0 10px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #7a6230;
+  background: #f6eedb;
+  border-radius: 6px;
+  padding: 5px 10px;
+}
+.mode-chip.mode-retrieve {
+  color: #5f4b7a;
+  background: #efe9f6;
+}
+.mode-chip.mode-prerequisite_review {
+  color: #3f5f86;
+  background: #e8eff7;
+}
+.confidence {
+  border: 0;
+  padding: 0;
+  margin: 0 0 14px;
+}
+.confidence legend {
+  font-size: 10px;
+  color: #7c877f;
+  margin-bottom: 7px;
+}
+.confidence > div {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+.confidence button {
+  border: 1px solid #dce4db;
+  background: #fff;
+  border-radius: 8px;
+  padding: 6px 4px;
+  display: grid;
+  gap: 2px;
+  text-align: center;
+}
+.confidence button strong {
+  font-size: 13px;
+  color: var(--forest);
+}
+.confidence button span {
+  font-size: 8px;
+  color: #8a9586;
+}
+.confidence button[aria-pressed="true"] {
+  border-color: var(--green);
+  background: #edf4e7;
+}
+.learning-note {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-top: 12px;
+  font-size: 11px;
+  color: #5f7457;
+  background: #f4f8ef;
+  border-radius: 8px;
+  padding: 10px 13px;
+}
+.learning-note strong {
+  display: block;
+  margin-top: 4px;
+  font-weight: 600;
+  color: var(--forest);
+}
+.learning-note + .confidence {
+  margin-top: 14px;
+}
+.hint-ladder {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.answer-footer:has(.hint-ladder) {
+  align-items: flex-start;
+  gap: 16px;
+}
+.answer-footer:has(.hint-ladder) .quiet {
+  white-space: nowrap;
+  padding-top: 3px;
+}
+.hint-ladder .text-button {
+  align-self: flex-start;
+}
+.hint-ladder .hint-box {
+  margin-top: 12px;
+}
+.hint-notice {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #f8f6ef;
+  font-size: 11px;
+  color: #6f6a55;
+}
+.hint-notice p {
+  margin: 0 0 8px;
+}
+.hint-notice textarea {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 12px;
+  margin-bottom: 8px;
+  resize: vertical;
+}
+.hint-error {
+  font-size: 11px;
+  color: #a5543d;
+  margin-top: 8px;
+}
+.geometry-prompt {
+  font: 18px/1.45 var(--serif);
+  white-space: normal;
+}
+.geometry-picker {
+  display: grid;
+  gap: 6px;
+  font-size: 10px;
+  color: #7c877f;
+  margin-top: 12px;
+}
+.geometry-picker select {
+  padding: 8px 10px;
+  font-size: 12px;
+  max-width: 100%;
+}
+.geometry-figure {
+  display: block;
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  margin: 6px auto 0;
+}
+.figure-label {
+  font-size: 11px;
+  fill: #45604a;
+  font-family: "DM Sans", sans-serif;
+}
+.learner-switch {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px 12px;
+  display: grid;
+  gap: 7px;
+}
+.learner-switch label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--forest);
+}
+.learner-switch small {
+  display: block;
+  font-weight: 400;
+  color: #8a9586;
+  font-size: 9px;
+  margin-top: 2px;
+}
+.learner-switch > div {
+  display: flex;
+  gap: 6px;
+}
+.learner-switch input {
+  min-width: 0;
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 11px;
+}
+.learner-switch input[aria-invalid="true"] {
+  border-color: #d9a48f;
+}
+.learner-switch button {
+  border: 1px solid #dce4db;
+  border-radius: 8px;
+  background: #f1f6ec;
+  color: var(--green);
+  display: grid;
+  place-items: center;
+  width: 32px;
+}
+.learner-record {
+  padding: 0 27px 20px;
+  margin-bottom: 20px;
+}
+.record-empty {
+  font-size: 11px;
+  color: #7c877f;
+  padding: 18px 0 0;
+  line-height: 1.6;
+}
+.record-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  font-size: 11px;
+}
+.record-table th,
+.record-table td {
+  text-align: left;
+  padding: 10px 6px;
+  border-bottom: 1px solid #edf1e7;
+}
+.record-table thead th {
+  font-size: 8px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #9ead91;
+  font-weight: 600;
+}
+.record-table tbody th {
+  font-weight: 500;
+  color: #4e6a46;
+}
+.record-calibration {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 11px;
+  color: #6f7d68;
+  margin-top: 14px;
+}
+@media (max-width: 700px) {
+  .subject-tabs {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .confidence button span {
+    display: none;
+  }
+  .record-table th:nth-child(3),
+  .record-table td:nth-child(3),
+  .record-table th:nth-child(4),
+  .record-table td:nth-child(4) {
+    display: none;
+  }
 }

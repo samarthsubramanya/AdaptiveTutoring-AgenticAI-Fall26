@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from tutoring.linear_systems_api import router as linear_systems_router
+from tutoring.learner_api import router as learner_router
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
@@ -52,6 +53,7 @@ app.include_router(studio_router)
 
 
 app.include_router(linear_systems_router)
+app.include_router(learner_router)
 app.include_router(probability_router)
 
 # ============================================================
