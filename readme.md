@@ -14,8 +14,8 @@ KernelAI is an agentic runtime that turns a user request into independently sche
 
 ## Probability Lab (work in progress)
 
-Explore coin and dice experiments with theoretical distributions, simulated
-results, and convergence charts. See [the Probability Lab guide](docs/probability-lab.md).
+Explore coin and dice experiments and sampling without replacement, with
+theoretical distributions and convergence charts. See [the Probability Lab guide](docs/probability-lab.md).
 
 ## Setup from scratch
 

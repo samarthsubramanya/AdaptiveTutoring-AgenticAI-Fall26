@@ -9,7 +9,11 @@ import streamlit as st
 
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
-EXPERIMENTS = {"Coin heads": "coin_heads", "Sum of two fair dice": "dice_sum"}
+EXPERIMENTS = {
+    "Coin heads": "coin_heads",
+    "Sum of two fair dice": "dice_sum",
+    "Sampling without replacement": "urn_draw",
+}
 EVENT_OPERATORS = {"Exactly": "eq", "At least": "gte", "At most": "lte"}
 EVENT_SYMBOLS = {"eq": "=", "gte": "≥", "lte": "≤"}
 
@@ -35,7 +39,7 @@ def run_experiment(parameters):
         return result
     except httpx.HTTPStatusError as exc:
         if exc.response.status_code == 422:
-            st.error("Check the settings: 1–10,000 trials, a seed from 0 to 4,294,967,295, and valid coin settings.")
+            st.error("Check the settings: 1–10,000 trials, a seed from 0 to 4,294,967,295, and valid experiment settings.")
         else:
             st.error("The probability service could not complete this experiment. Please try again.")
     except httpx.HTTPError:
@@ -115,6 +119,18 @@ with st.form("probability_settings"):
             key="probability_heads_probability",
         )
         st.caption("One trial counts the heads in this many independent coin tosses.")
+    elif experiment == "urn_draw":
+        population_column, marked_column = st.columns(2)
+        parameters["population_size"] = population_column.number_input(
+            "Population size", min_value=2, max_value=200, value=20, step=1, key="probability_population_size",
+        )
+        parameters["marked_items"] = marked_column.number_input(
+            "Marked items", min_value=0, max_value=200, value=5, step=1, key="probability_marked_items",
+        )
+        parameters["draws"] = st.number_input(
+            "Draws per trial", min_value=1, max_value=20, value=5, step=1, key="probability_draws",
+        )
+        st.caption("One trial counts the marked items drawn without replacement. The population is restored before the next trial.")
     else:
         st.caption("One trial rolls two independent, fair six-sided dice and adds their faces.")
     if track_event:
@@ -122,22 +138,32 @@ with st.form("probability_settings"):
         condition = condition_column.selectbox(
             "Event condition", list(EVENT_OPERATORS), key="probability_event_condition",
         )
-        coin = experiment == "coin_heads"
+        cutoff_label = {
+            "coin_heads": "Heads cutoff", "dice_sum": "Dice sum cutoff", "urn_draw": "Marked item cutoff",
+        }[experiment]
+        dice = experiment == "dice_sum"
         cutoff = cutoff_column.number_input(
-            "Heads cutoff" if coin else "Dice sum cutoff",
-            min_value=0 if coin else 2, max_value=20 if coin else 12,
-            value=1 if coin else 7, step=1, key=f"probability_event_value_{experiment}",
+            cutoff_label, min_value=2 if dice else 0, max_value=12 if dice else 20,
+            value=7 if dice else 1, step=1, key=f"probability_event_value_{experiment}",
         )
-        if coin:
+        if experiment == "coin_heads":
             st.caption("The heads cutoff can be at most the number of tosses per trial.")
+        elif experiment == "urn_draw":
+            st.caption("The marked item cutoff can be at most the number of draws per trial.")
         parameters["event_operator"] = EVENT_OPERATORS[condition]
         parameters["event_value"] = cutoff
     submitted = st.form_submit_button("Run experiment", type="primary")
 
 if submitted:
     clear_result()
-    if track_event and experiment == "coin_heads" and cutoff > parameters["coin_tosses"]:
+    if experiment == "urn_draw" and parameters["marked_items"] > parameters["population_size"]:
+        st.error("Marked items cannot exceed the population size.")
+    elif experiment == "urn_draw" and parameters["draws"] > parameters["population_size"]:
+        st.error("Draws per trial cannot exceed the population size.")
+    elif track_event and experiment == "coin_heads" and cutoff > parameters["coin_tosses"]:
         st.error(f"Choose a heads cutoff from 0 to {parameters['coin_tosses']} for this run.")
+    elif track_event and experiment == "urn_draw" and cutoff > parameters["draws"]:
+        st.error(f"Choose a marked item cutoff from 0 to {parameters['draws']} for this run.")
     else:
         with st.spinner("Running experiment…"):
             st.session_state.probability_result = run_experiment(parameters)
@@ -152,13 +178,19 @@ actual = result["parameters"]
 settings = f"{actual['trials']:,} trials · Seed {actual['seed']}"
 if result["experiment"] == "coin_heads":
     settings += f" · {actual['coin_tosses']} tosses per trial · P(heads) = {actual['heads_probability']:g}"
+elif result["experiment"] == "urn_draw":
+    settings += f" · Population {actual['population_size']} · {actual['marked_items']} marked items · {actual['draws']} draws per trial"
 st.caption("Displayed run: " + settings)
 st.caption("Edit the settings and run again to replace these results.")
+outcome, outcome_label, mean_unit = {
+    "coin_heads": ("Heads", "Number of heads", "Heads per trial"),
+    "dice_sum": ("Dice sum", "Sum of two dice", "Sum per trial"),
+    "urn_draw": ("Marked items drawn", "Marked items drawn", "Marked items per trial"),
+}[result["experiment"]]
 
 event = result.get("event")
 if event is not None:
     st.subheader("Event probability")
-    outcome = "Heads" if result["experiment"] == "coin_heads" else "Dice sum"
     st.write(f"**{outcome} {EVENT_SYMBOLS[event['operator']]} {event['value']}**")
     st.caption("Matched outcomes · " + ", ".join(map(str, event["outcomes"])))
     observed_event, theoretical_event = st.columns(2)
@@ -187,7 +219,6 @@ summary = result["summary"]
 observed_column, expected_column = st.columns(2)
 observed_column.metric("Observed mean", f"{summary['observed_mean']:.3f}")
 expected_column.metric("Theoretical mean", f"{summary['theoretical_mean']:.3f}")
-mean_unit = "Heads per trial" if result["experiment"] == "coin_heads" else "Sum per trial"
 st.caption("Mean units: " + mean_unit.lower() + ".")
 st.metric(
     "Largest probability gap", f"{100 * summary['max_probability_gap']:.2f} pp",
@@ -203,7 +234,7 @@ chart_data = pd.DataFrame({
 })
 st.bar_chart(
     chart_data, x="Outcome", y=["Observed", "Theoretical"], stack=False,
-    x_label="Number of heads" if result["experiment"] == "coin_heads" else "Sum of two dice",
+    x_label=outcome_label,
     y_label="Probability (%)",
 )
 st.caption("Bars show percentages; the gap above is measured in percentage points (pp).")

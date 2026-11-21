@@ -22,6 +22,14 @@ def example_result(experiment):
         ]
         parameters = {"trials": 8, "seed": 17, "coin_tosses": 2, "heads_probability": 0.5}
         title, observed, theoretical, gap = "Heads in two coin tosses", 1.125, 1.0, 0.125
+    elif experiment == "urn_draw":
+        distribution = [
+            {"outcome": 0, "count": 3, "observed_probability": 3 / 8, "theoretical_probability": 6 / 15},
+            {"outcome": 1, "count": 4, "observed_probability": 4 / 8, "theoretical_probability": 8 / 15},
+            {"outcome": 2, "count": 1, "observed_probability": 1 / 8, "theoretical_probability": 1 / 15},
+        ]
+        parameters = {"trials": 8, "seed": 17, "population_size": 6, "marked_items": 2, "draws": 2}
+        title, observed, theoretical, gap = "Marked items in two draws", 0.75, 2 / 3, 7 / 120
     else:
         distribution = [
             {"outcome": outcome, "count": 8 if outcome == 7 else 0,
@@ -34,7 +42,7 @@ def example_result(experiment):
     return {
         "experiment": experiment, "title": title, "parameters": parameters,
         "distribution": distribution,
-        "convergence": [{"trial": 1, "observed_mean": 0 if experiment == "coin_heads" else 7,
+        "convergence": [{"trial": 1, "observed_mean": 7 if experiment == "dice_sum" else 0,
                          "theoretical_mean": theoretical},
                         {"trial": 8, "observed_mean": observed, "theoretical_mean": theoretical}],
         "summary": {"observed_mean": observed, "theoretical_mean": theoretical, "max_probability_gap": gap},
@@ -53,6 +61,17 @@ COIN_EVENT = {
 }
 
 
+URN_EVENT = {
+    "operator": "gte", "value": 2, "outcomes": [2], "count": 1,
+    "observed_probability": 0.125, "theoretical_probability": 1 / 15,
+    "convergence": [
+        {"trial": 1, "observed_probability": 0.0, "theoretical_probability": 1 / 15},
+        {"trial": 8, "observed_probability": 0.125, "theoretical_probability": 1 / 15},
+    ],
+    "confidence_interval": {"level": 0.95, "lower": 0.0224, "upper": 0.4709},
+}
+
+
 @pytest.fixture
 def probability_api(monkeypatch):
     calls, exports = [], []
@@ -62,7 +81,7 @@ def probability_api(monkeypatch):
         calls.append((url, deepcopy(json)))
         result = example_result(json["experiment"])
         if "event_operator" in json:
-            result["event"] = COIN_EVENT
+            result["event"] = URN_EVENT if json["experiment"] == "urn_draw" else COIN_EVENT
         return httpx.Response(200, json=result, request=httpx.Request("POST", url))
 
     original_download = st.download_button
@@ -115,6 +134,89 @@ def test_displayed_run_and_export_stay_bound_to_response_when_settings_are_edite
     assert len(calls) == 1
     assert exports[-1]["parameters"] == example_result("coin_heads")["parameters"]
     assert not app.exception
+
+
+def test_urn_controls_submit_only_urn_settings_and_keep_output_bound_to_run(probability_api):
+    calls, exports = probability_api
+    app = AppTest.from_file(str(PAGE), default_timeout=15).run()
+    app.selectbox(key="probability_experiment").select("Sampling without replacement").run()
+    assert not calls
+    population = app.number_input(key="probability_population_size")
+    marked = app.number_input(key="probability_marked_items")
+    draws = app.number_input(key="probability_draws")
+    assert (population.min, population.max, population.value) == (2, 200, 20)
+    assert (marked.min, marked.max, marked.value) == (0, 200, 5)
+    assert (draws.min, draws.max, draws.value) == (1, 20, 5)
+    app.number_input(key="probability_trials").set_value(8)
+    app.number_input(key="probability_seed").set_value(17)
+    population.set_value(6)
+    marked.set_value(2)
+    draws.set_value(2)
+    run(app)
+
+    assert calls[-1][1] == {
+        "experiment": "urn_draw", "trials": 8, "seed": 17,
+        "population_size": 6, "marked_items": 2, "draws": 2,
+    }
+    assert [metric.value for metric in app.metric] == ["0.750", "0.667", "5.83 pp"]
+    assert any("Mean units: marked items per trial." == item.value for item in app.caption)
+    assert any("Marked items drawn" in chart.proto.spec for chart in app.get("vega_lite_chart"))
+    assert exports[-1] == example_result("urn_draw")
+
+    app.number_input(key="probability_population_size").set_value(20)
+    app.number_input(key="probability_marked_items").set_value(9)
+    app.number_input(key="probability_draws").set_value(5).run()
+    displayed = next(item.value for item in app.caption if item.value.startswith("Displayed run:"))
+    assert "Population 6 · 2 marked items · 2 draws per trial" in displayed
+    assert len(calls) == 1
+    assert exports[-1]["parameters"] == example_result("urn_draw")["parameters"]
+
+    app.selectbox(key="probability_experiment").select("Sum of two fair dice").run()
+    run(app)
+    assert set(calls[-1][1]) == {"experiment", "trials", "seed"}
+
+
+@pytest.mark.parametrize("population,marked,draws,cutoff,message", [
+    (4, 5, 2, None, "Marked items cannot exceed the population size."),
+    (4, 2, 5, None, "Draws per trial cannot exceed the population size."),
+    (6, 2, 2, 3, "Choose a marked item cutoff from 0 to 2 for this run."),
+])
+def test_invalid_urn_settings_do_not_reach_api(probability_api, population, marked, draws, cutoff, message):
+    calls, exports = probability_api
+    app = AppTest.from_file(str(PAGE), default_timeout=15).run()
+    app.selectbox(key="probability_experiment").select("Sampling without replacement").run()
+    if cutoff is not None:
+        app.checkbox(key="probability_track_event").check().run()
+        app.number_input(key="probability_event_value_urn_draw").set_value(cutoff)
+    app.number_input(key="probability_population_size").set_value(population)
+    app.number_input(key="probability_marked_items").set_value(marked)
+    app.number_input(key="probability_draws").set_value(draws)
+    run(app)
+    assert not calls
+    assert not exports
+    assert app.error[0].value == message
+    assert app.session_state["probability_result"] is None
+
+
+def test_urn_event_uses_marked_item_labels_and_exports_response(probability_api):
+    calls, exports = probability_api
+    app = AppTest.from_file(str(PAGE), default_timeout=15).run()
+    app.selectbox(key="probability_experiment").select("Sampling without replacement").run()
+    app.checkbox(key="probability_track_event").check().run()
+    cutoff = app.number_input(key="probability_event_value_urn_draw")
+    assert (cutoff.min, cutoff.max, cutoff.label) == (0, 20, "Marked item cutoff")
+    cutoff.set_value(2)
+    app.selectbox(key="probability_event_condition").select("At least")
+    app.number_input(key="probability_population_size").set_value(6)
+    app.number_input(key="probability_marked_items").set_value(2)
+    app.number_input(key="probability_draws").set_value(2)
+    run(app)
+    assert calls[-1][1]["event_operator"] == "gte"
+    assert calls[-1][1]["event_value"] == 2
+    assert any(item.value == "**Marked items drawn ≥ 2**" for item in app.markdown)
+    assert [metric.value for metric in app.metric][:2] == ["12.50%", "6.67%"]
+    assert len(app.get("vega_lite_chart")) == 3
+    assert exports[-1]["event"] == URN_EVENT
 
 
 def test_switching_to_dice_clears_results_and_omits_coin_parameters(probability_api):

@@ -15,6 +15,12 @@ tutors. It uses the standard library and needs no model or database credentials.
 - **Dice sum:** one trial rolls two independent fair six-sided dice and adds
   them. There are 36 equally likely ordered pairs, so sum 7 has probability
   `6/36` and the theoretical mean is 7.
+- **Sampling without replacement** counts marked items in a sample of `n`
+  items from a population of `N`, of which `K` are marked. The theoretical
+  probability of `k` marked items is `C(K,k) C(N-K,n-k) / C(N,n)`, with mean
+  `nK/N`. This is the [hypergeometric model](https://openstax.org/books/introductory-statistics-2e/pages/4-5-hypergeometric-distribution).
+  Each draw changes the remaining population. The full population is restored
+  before the next trial.
 
 The distribution chart compares simulated relative frequencies with those model
 probabilities. The convergence chart shows the cumulative average outcome, not
@@ -62,6 +68,10 @@ the existing MCP server and model configuration are running.
 8. Download the run to inspect its settings, counts, probabilities, and
    cumulative estimates. Event checkpoints include their hit counts and
    confidence intervals.
+9. Select **Sampling without replacement** and use a population of 10 with
+   4 marked items and 3 draws per trial. Track **At least** 2 marked items.
+   The theoretical probability is `(36 + 4) / 120 = 33.33%`. Run 1,000 trials
+   with seed 42 to inspect the simulation and export its actual results.
 
 API example:
 
@@ -73,6 +83,10 @@ curl http://127.0.0.1:8000/math/probability/experiments \
 
 Runs are bounded to 10,000 trials and 20 tosses per coin trial. The seed controls
 a local random generator; other requests and the global generator are unaffected.
+Sampling without replacement supports populations from 2 to 200 items and at
+most 20 draws per trial. The marked count and the draw count must each fit
+inside the population. Set `experiment` to `urn_draw` in the API and provide
+`population_size`, `marked_items`, and `draws` as integer fields.
 This prototype simulates known models. It does not measure physical randomness,
 certify fairness, or assess student mastery.
 
