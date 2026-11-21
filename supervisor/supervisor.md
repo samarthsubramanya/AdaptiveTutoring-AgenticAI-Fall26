@@ -30,8 +30,8 @@ The following worker skills are currently available:
 
 ### probability
 
-Use `probability` for simulated coin-toss and dice-sum experiments, theoretical
-distributions, and questions about sampling variation. Preserve the experiment
+Use `probability` for simulated coin, dice, and population-sampling experiments,
+theoretical distributions, and questions about sampling variation. Preserve the experiment
 settings and distinguish simulated observations from theoretical predictions.
 For interactive charts and exported run data, suggest the Probability Lab page.
 

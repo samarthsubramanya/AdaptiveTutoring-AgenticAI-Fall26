@@ -56,7 +56,7 @@ SKILLS: dict[str, Skill] = {
     "probability": Skill(
         name="probability",
         description=(
-            "Explore coin and dice probability through reproducible simulations, "
+            "Explore coin, dice, and population sampling through reproducible simulations, "
             "theoretical distributions, and sampling-variation comparisons."
         ),
         path=SKILLS_DIR / "math" / "probability" / "probability.md",

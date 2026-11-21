@@ -43,6 +43,57 @@ def test_coin_settings_are_applied_and_recorded():
     assert data["summary"]["max_probability_gap"] == 0
 
 
+def test_urn_settings_use_the_hypergeometric_model_and_reproduce_the_run():
+    body = {
+        "experiment": "urn_draw", "trials": 100, "seed": 17,
+        "population_size": 10, "marked_items": 4, "draws": 3,
+        "event_operator": "gte", "event_value": 2,
+    }
+    response = client.post(URL, json=body)
+    assert response.status_code == 200
+    result = response.json()
+    assert result == client.post(URL, json=body).json()
+    assert result["parameters"] == {
+        "trials": 100, "seed": 17, "population_size": 10, "marked_items": 4, "draws": 3,
+    }
+    assert [row["outcome"] for row in result["distribution"]] == [0, 1, 2, 3]
+    assert [row["theoretical_probability"] for row in result["distribution"]] == pytest.approx([
+        1 / 6, 0.5, 0.3, 1 / 30,
+    ])
+    assert sum(row["count"] for row in result["distribution"]) == 100
+    assert result["summary"]["theoretical_mean"] == pytest.approx(1.2)
+    assert result["event"]["theoretical_probability"] == pytest.approx(1 / 3)
+
+
+@pytest.mark.parametrize("changes", [
+    {"population_size": 1}, {"population_size": 201},
+    {"marked_items": -1}, {"marked_items": 201},
+    {"draws": 0}, {"draws": 21},
+    {"population_size": True}, {"population_size": "10"}, {"population_size": 10.0},
+    {"marked_items": False}, {"marked_items": "4"}, {"marked_items": 4.0},
+    {"draws": True}, {"draws": "3"}, {"draws": 3.0},
+])
+def test_urn_parameters_require_bounded_integers(changes):
+    body = {"experiment": "urn_draw", "population_size": 10, "marked_items": 4, "draws": 3}
+    assert client.post(URL, json={**body, **changes}).status_code == 422
+
+
+@pytest.mark.parametrize("body", [
+    {"experiment": "urn_draw", "population_size": 10, "marked_items": 11, "draws": 3},
+    {"experiment": "urn_draw", "population_size": 2, "marked_items": 1, "draws": 3},
+    {"experiment": "urn_draw", "coin_tosses": 1},
+    {"experiment": "urn_draw", "heads_probability": 0.5},
+    {"experiment": "coin_heads", "population_size": 10},
+    {"experiment": "coin_heads", "marked_items": 0},
+    {"experiment": "coin_heads", "draws": 1},
+    {"experiment": "dice_sum", "population_size": 10},
+    {"experiment": "dice_sum", "marked_items": 0},
+    {"experiment": "dice_sum", "draws": 1},
+])
+def test_parameters_incompatible_with_the_experiment_are_rejected(body):
+    assert client.post(URL, json=body).status_code == 422
+
+
 @pytest.mark.parametrize("changes", [
     {"experiment": "roulette"}, {"trials": 0}, {"trials": 10001},
     {"trials": True}, {"seed": -1}, {"seed": 2**32}, {"seed": "42"},
@@ -95,6 +146,43 @@ async def test_probability_skill_is_advertised_and_callable_through_mcp():
         assert sum(row["count"] for row in payload["distribution"]) == 10
         assert payload["summary"]["theoretical_mean"] == 7
         assert payload["event"]["theoretical_probability"] == pytest.approx(10 / 36)
+
+
+@pytest.mark.asyncio
+async def test_urn_experiment_is_callable_through_mcp_with_exact_theory():
+    async with Client(mcp) as connection:
+        body = {
+            "experiment": "urn_draw", "trials": 20, "seed": 42,
+            "population_size": 10, "marked_items": 4, "draws": 3,
+        }
+        response = await connection.call_tool("run_probability_experiment", body)
+        assert not response.is_error
+        payload = response.structured_content
+        if payload is None:
+            payload = json.loads("".join(item.text for item in response.content if hasattr(item, "text")))
+        assert payload == client.post(URL, json=body).json()
+        assert [row["theoretical_probability"] for row in payload["distribution"]] == pytest.approx([
+            1 / 6, 0.5, 0.3, 1 / 30,
+        ])
+        assert payload["summary"]["theoretical_mean"] == pytest.approx(1.2)
+
+
+@pytest.mark.asyncio
+async def test_mcp_rejects_coerced_or_incompatible_urn_settings():
+    invalid_settings = [
+        {"population_size": True}, {"population_size": "10"}, {"population_size": 10.0},
+        {"marked_items": False}, {"marked_items": "4"}, {"marked_items": 4.0},
+        {"draws": True}, {"draws": "3"}, {"draws": 3.0},
+        {"marked_items": 11}, {"draws": 11}, {"coin_tosses": 1},
+        {"heads_probability": 0.5},
+    ]
+    async with Client(mcp) as connection:
+        for invalid in invalid_settings:
+            response = await connection.call_tool("run_probability_experiment", {
+                "experiment": "urn_draw", "population_size": 10, "marked_items": 4,
+                "draws": 3, **invalid,
+            })
+            assert response.is_error, invalid
 
 
 @pytest.mark.asyncio

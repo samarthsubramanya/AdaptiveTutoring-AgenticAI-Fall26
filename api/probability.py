@@ -13,13 +13,16 @@ router = APIRouter(prefix="/math/probability", tags=["Probability Lab"])
 
 class ExperimentRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    experiment: Literal["coin_heads", "dice_sum"]
+    experiment: Literal["coin_heads", "dice_sum", "urn_draw"]
     trials: Annotated[int, Field(strict=True, ge=1, le=10000)] = 1000
     seed: Annotated[int, Field(strict=True, ge=0, le=2**32 - 1)] = 42
     coin_tosses: Annotated[int, Field(strict=True, ge=1, le=20)] | None = None
     heads_probability: Annotated[float, Field(strict=True, ge=0, le=1, allow_inf_nan=False)] | None = None
     event_operator: Literal["eq", "gte", "lte"] | None = None
     event_value: Annotated[int, Field(strict=True, ge=0, le=20)] | None = None
+    population_size: Annotated[int, Field(strict=True, ge=2, le=200)] | None = None
+    marked_items: Annotated[int, Field(strict=True, ge=0, le=200)] | None = None
+    draws: Annotated[int, Field(strict=True, ge=1, le=20)] | None = None
 
 
 @router.post("/experiments")

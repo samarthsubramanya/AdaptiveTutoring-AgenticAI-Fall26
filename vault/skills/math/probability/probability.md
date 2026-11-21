@@ -8,6 +8,12 @@ Supported experiments:
 - `coin_heads`: count heads in a set of independent coin tosses. The coin
   may be biased. Use `coin_tosses` and `heads_probability` to set the model.
 - `dice_sum`: sum two independent, fair six-sided dice. Do not pass coin options.
+- `urn_draw`: count marked items in a uniform sample without replacement.
+  Set `population_size`, `marked_items`, and `draws`. Their defaults are 20,
+  5, and 5. Each trial starts with the full population, takes the sample, and
+  records its marked count. Explain that draws within a trial are dependent.
+  Use populations of 2 to 200 items and 1 to 20 draws, with both marked items
+  and draws bounded by the population size.
 
 For an event such as a dice sum of at least 9, use `event_operator: gte`
 and `event_value: 9`. Use `eq` for exactly and `lte` for at most. Explain the
