@@ -31,14 +31,19 @@ def run_probability_experiment(
     heads_probability: float | None = None,
     event_operator: str | None = None,
     event_value: int | None = None,
+    population_size: int | None = None,
+    marked_items: int | None = None,
+    draws: int | None = None,
 ) -> dict:
-    """Simulate binomial heads counts or two-dice sums without changing global randomness."""
-    if experiment not in ("coin_heads", "dice_sum"):
-        raise ValueError("Choose coin_heads or dice_sum.")
+    """Simulate bounded discrete experiments using a local seeded generator."""
+    if experiment not in ("coin_heads", "dice_sum", "urn_draw"):
+        raise ValueError("Choose coin_heads, dice_sum, or urn_draw.")
     if type(trials) is not int or not 1 <= trials <= 10_000:
         raise ValueError("Trials must be an integer from 1 to 10000.")
     if type(seed) is not int or not 0 <= seed <= 2**32 - 1:
         raise ValueError("Seed must be an integer from 0 to 4294967295.")
+    if experiment != "urn_draw" and any(value is not None for value in (population_size, marked_items, draws)):
+        raise ValueError("Population options apply only to urn_draw.")
     parameters = {"trials": trials, "seed": seed}
     if experiment == "coin_heads":
         n = 10 if coin_tosses is None else coin_tosses
@@ -57,7 +62,7 @@ def run_probability_experiment(
             "Theory uses the binomial model: P(K=k) = C(n,k) p^k (1-p)^(n-k) "
             "for n independent tosses with heads probability p. "
         )
-    else:
+    elif experiment == "dice_sum":
         if coin_tosses is not None or heads_probability is not None:
             raise ValueError("Coin options do not apply to dice_sum.")
         outcomes = range(2, 13)
@@ -67,6 +72,35 @@ def run_probability_experiment(
         explanation = (
             "Theory counts the 36 equally likely ordered pairs of two independent fair dice. "
             "A sum of 7 occurs in six pairs, so its theoretical probability is 1/6. "
+        )
+    else:
+        if coin_tosses is not None or heads_probability is not None:
+            raise ValueError("Coin options do not apply to urn_draw.")
+        population_size = 20 if population_size is None else population_size
+        marked_items = 5 if marked_items is None else marked_items
+        draws = 5 if draws is None else draws
+        if type(population_size) is not int or not 2 <= population_size <= 200:
+            raise ValueError("Population size must be an integer from 2 to 200.")
+        if type(marked_items) is not int or not 0 <= marked_items <= population_size:
+            raise ValueError("Marked items must be an integer from 0 to the population size.")
+        if type(draws) is not int or not 1 <= draws <= min(20, population_size):
+            raise ValueError("Draws must be an integer from 1 to the smaller of 20 and the population size.")
+        parameters.update(population_size=population_size, marked_items=marked_items, draws=draws)
+        outcomes = range(draws + 1)
+        total_samples = math.comb(population_size, draws)
+        theoretical = {
+            marked: math.comb(marked_items, marked)
+            * math.comb(population_size - marked_items, draws - marked) / total_samples
+            for marked in outcomes
+        }
+        theoretical_mean = draws * marked_items / population_size
+        title = "Marked items drawn without replacement"
+        explanation = (
+            "Each trial takes a uniform sample without replacement from the population. "
+            "The outcome counts marked items in that sample. Theory uses the hypergeometric "
+            "model: P(X=k) = C(K,k) C(N-K,n-k) / C(N,n), with mean nK/N. "
+            "Draws within a trial depend on earlier draws. The full population is restored "
+            "before the next trial, so separate trials are independent. "
         )
     event = None
     matching_outcomes = set()
@@ -98,8 +132,10 @@ def run_probability_experiment(
     for trial in range(1, trials + 1):
         if experiment == "coin_heads":
             outcome = sum(rng.random() < p for _ in range(n))
-        else:
+        elif experiment == "dice_sum":
             outcome = rng.randint(1, 6) + rng.randint(1, 6)
+        else:
+            outcome = sum(item < marked_items for item in rng.sample(range(population_size), draws))
         counts[outcome] += 1
         total += outcome
         if outcome in matching_outcomes:

@@ -2,6 +2,7 @@
 
 import random
 from collections import Counter
+from itertools import combinations
 
 import pytest
 
@@ -10,7 +11,7 @@ from math_lab.probability import run_probability_experiment
 
 @pytest.mark.parametrize("experiment,options", [
     ("coin_heads", {}), ("coin_heads", {"coin_tosses": 20, "heads_probability": 0.2}),
-    ("dice_sum", {}),
+    ("dice_sum", {}), ("urn_draw", {}),
 ])
 def test_distributions_and_convergence_match_the_actual_counts(experiment, options):
     result = run_probability_experiment(experiment, trials=9999, seed=123, **options)
@@ -65,7 +66,7 @@ def test_dice_theory_is_the_exact_ordered_pair_distribution():
     assert result["parameters"] == {"trials": 1000, "seed": 42}
 
 
-@pytest.mark.parametrize("experiment", ["coin_heads", "dice_sum"])
+@pytest.mark.parametrize("experiment", ["coin_heads", "dice_sum", "urn_draw"])
 def test_reproducible_local_rng_does_not_change_global_random_state(experiment):
     state = random.getstate()
     first = run_probability_experiment(experiment, trials=500, seed=12)
@@ -184,3 +185,55 @@ def test_wilson_interval_stays_bounded_with_zero_or_all_hits(heads_probability, 
         event_operator="eq", event_value=1,
     )["event"]
     assert event["confidence_interval"] == pytest.approx(expected_interval)
+
+
+def test_urn_theory_matches_enumerated_uniform_samples():
+    possible_samples = list(combinations(range(10), 3))
+    exact_counts = Counter(sum(item < 4 for item in sample) for sample in possible_samples)
+    result = run_probability_experiment(
+        "urn_draw", population_size=10, marked_items=4, draws=3, event_operator="gte", event_value=2,
+    )
+    assert [row["theoretical_probability"] for row in result["distribution"]] == pytest.approx(
+        [exact_counts[k] / len(possible_samples) for k in range(4)]
+    )
+    assert result["summary"]["theoretical_mean"] == pytest.approx(1.2)
+    assert result["event"]["theoretical_probability"] == pytest.approx(1 / 3)
+    assert result["event"]["count"] == sum(row["count"] for row in result["distribution"] if row["outcome"] >= 2)
+    assert result["parameters"] == {"trials": 1000, "seed": 42, "population_size": 10, "marked_items": 4, "draws": 3}
+
+
+@pytest.mark.parametrize("population,marked,draws,expected", [(8, 3, 8, 3), (10, 0, 3, 0), (10, 10, 3, 3)])
+def test_urn_degenerate_samples_have_one_possible_count(population, marked, draws, expected):
+    result = run_probability_experiment(
+        "urn_draw", population_size=population, marked_items=marked, draws=draws, trials=100,
+    )
+    for row in result["distribution"]:
+        assert row["count"] == (100 if row["outcome"] == expected else 0)
+        assert row["theoretical_probability"] == (1.0 if row["outcome"] == expected else 0.0)
+    assert result["summary"]["theoretical_mean"] == expected
+
+
+def test_urn_sampling_matches_the_seeded_sequence_and_restores_the_population():
+    rng = random.Random(17)
+    samples = [sum(item < 4 for item in rng.sample(range(10), 3)) for _ in range(20)]
+    result = run_probability_experiment("urn_draw", trials=20, seed=17, population_size=10, marked_items=4, draws=3)
+    assert [row["count"] for row in result["distribution"]] == [samples.count(k) for k in range(4)]
+    assert sum(row["count"] for row in result["distribution"]) == 20
+
+
+@pytest.mark.parametrize("options", [
+    {"population_size": 1}, {"population_size": 201}, {"population_size": True}, {"population_size": "10"},
+    {"marked_items": -1}, {"population_size": 3, "marked_items": 4}, {"marked_items": False},
+    {"draws": 0}, {"draws": 21}, {"population_size": 3, "marked_items": 2, "draws": 4},
+    {"draws": 1.5}, {"draws": True}, {"coin_tosses": 3}, {"heads_probability": 0.5},
+])
+def test_invalid_urn_settings_are_rejected(options):
+    with pytest.raises(ValueError):
+        run_probability_experiment("urn_draw", **options)
+
+
+@pytest.mark.parametrize("experiment", ["coin_heads", "dice_sum"])
+@pytest.mark.parametrize("options", [{"population_size": 20}, {"marked_items": 5}, {"draws": 3}])
+def test_other_experiments_reject_urn_settings(experiment, options):
+    with pytest.raises(ValueError, match="Population options"):
+        run_probability_experiment(experiment, **options)
