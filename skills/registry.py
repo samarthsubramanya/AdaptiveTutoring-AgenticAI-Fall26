@@ -30,25 +30,38 @@ class Skill:
 
 
 SKILLS: dict[str, Skill] = {
+    "equation_solving": Skill(name="equation_solving", description="Mathematics: solve confirmed polynomial equations using deterministic verification.",
+        path=SKILLS_DIR.parent / "vault/skills/math/equation-solving/equation-solving.md", allowed_tools={"verify_symbolic_answer"}),
+    "factoring": Skill(name="factoring", description="Mathematics: check factored form using deterministic verification.",
+        path=SKILLS_DIR.parent / "vault/skills/math/factoring/factoring.md", allowed_tools={"verify_symbolic_answer"}),
+    "expression_expansion": Skill(name="expression_expansion", description="Mathematics: check an expanded expression using deterministic verification.",
+        path=SKILLS_DIR.parent / "vault/skills/math/expression-expansion/expression-expansion.md", allowed_tools={"verify_symbolic_answer"}),
+    "polynomial_derivatives": Skill(name="polynomial_derivatives", description="Mathematics: check a polynomial derivative using deterministic verification.",
+        path=SKILLS_DIR.parent / "vault/skills/math/polynomial-derivatives/polynomial-derivatives.md", allowed_tools={"verify_symbolic_answer"}),
+    "solution_checking": Skill(name="solution_checking", description="Mathematics: verify a student solution using deterministic verification.",
+        path=SKILLS_DIR.parent / "vault/skills/math/solution-checking/solution-checking.md", allowed_tools={"verify_symbolic_answer", "verify_algebra_answer"}),
+    "interactive_tutor": Skill(name="interactive_tutor", description="Run server-controlled interactive tutoring: attempts, graduated hints, prerequisite review, fresh unaided checks and persistent learner evidence.",
+        path=SKILLS_DIR.parent / "vault/skills/math/interactive-tutor/interactive-tutor.md",
+        allowed_tools={"start_learning_journey", "get_learning_journey", "submit_learning_attempt", "request_learning_hint", "advance_learning_journey"}),
     "algebra": Skill(
         name="algebra",
         description=(
             "Check student answers to eight predefined introductory algebra "
             "equations, or verify custom polynomial algebra and derivatives with SymPy."
         ),
-        path=SKILLS_DIR / "algebra.md",
+        path=SKILLS_DIR.parent / "vault/skills/math/algebra/algebra.md",
         allowed_tools={"algebra_problems", "verify_algebra_answer", "verify_symbolic_answer"},
     ),
     "inequalities": Skill(
         name="inequalities",
         description="Verify full real solution sets for linear and quadratic inequalities, including endpoints.",
-        path=SKILLS_DIR / "inequalities.md",
+        path=SKILLS_DIR.parent / "vault/skills/math/inequalities/inequalities.md",
         allowed_tools={"verify_inequality_answer"},
     ),
     "statistics": Skill(
         name="statistics",
         description="Check descriptive statistics on explicit data, with population/sample conventions.",
-        path=SKILLS_DIR / "statistics.md",
+        path=SKILLS_DIR.parent / "vault/skills/math/statistics/statistics.md",
         allowed_tools={"verify_statistics_answer"},
     ),
     "text2sql": Skill(
@@ -80,7 +93,7 @@ SKILLS: dict[str, Skill] = {
             "Solve two linear equations in x and y with exact worked steps, "
             "or check a student's answer by substitution into both equations."
         ),
-        path=SKILLS_DIR / "linear_systems.md",
+        path=SKILLS_DIR.parent / "vault/skills/math/linear-systems/linear-systems.md",
         allowed_tools={"solve_linear_system", "check_linear_system_answer"},
     ),
     "probability": Skill(
@@ -98,7 +111,7 @@ SKILLS: dict[str, Skill] = {
             "Check area, perimeter, Pythagoras, triangle-angle, distance, midpoint "
             "and slope answers exactly with SymPy."
         ),
-        path=SKILLS_DIR / "geometry.md",
+        path=SKILLS_DIR.parent / "vault/skills/math/geometry/geometry.md",
         allowed_tools={"verify_geometry_answer"},
     ),
     "retrieve_first_gate": Skill(

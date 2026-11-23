@@ -374,3 +374,13 @@ The Supervisor decides what work needs to happen.
 Task Workers decide how to perform their assigned specialized work.
 
 The runtime decides when those Tasks execute.
+
+
+## Interactive learning requests
+
+For multi-turn student practice, delegate using `interactive_tutor` with the
+relevant mathematical skill. Start/resume a server journey, show the prompt,
+and wait for a genuine student attempt. The journey server owns teaching mode,
+revision, grading, hint gates, prerequisite return and fresh checks. Do not
+bypass a hint restriction by calling a standalone checker or writing a solution.
+Use standalone math checking for explicit isolated verification requests only.

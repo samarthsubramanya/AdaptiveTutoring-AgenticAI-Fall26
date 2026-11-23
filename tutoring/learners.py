@@ -139,7 +139,7 @@ class LearnerStore:
 
     def record(self, learner_id: str, *, skill: str, topic: str, key: str, label: str,
                status: str, mode: str = "practice", confidence_before: int | None = None,
-               hint_level: int | None = None) -> dict[str, Any] | None:
+               hint_level: int | None = None, assisted_context: bool = False) -> dict[str, Any] | None:
         """Record one verified result; anything but correct/incorrect is ignored."""
         if status not in {"correct", "incorrect"}:
             return None
@@ -150,12 +150,14 @@ class LearnerStore:
                 "skill": skill, "topic": topic, "label": label, "mode": mode,
                 "attempts": 0, "hint_level": 0, "reflections": [], "opened": moment})
             stats = data["topics"].setdefault(topic, _empty_topic())
+            if stats["last_verified"] and _now() - datetime.fromisoformat(stats["last_verified"]) > STALE_AFTER:
+                stats.update(support="full", independent_streak=0, miss_streak=0, pending_unassisted_check=False)
             if hint_level is not None and hint_level > item["hint_level"]:  # hints given elsewhere (algebra sessions)
                 stats["hints_used"] += hint_level - item["hint_level"]
                 item["hint_level"] = hint_level
             item["attempts"] += 1
             correct = status == "correct"
-            assisted = item["hint_level"] > 0 or item["attempts"] > 1
+            assisted = assisted_context or item["hint_level"] > 0 or item["attempts"] > 1
             stats["attempts"] += 1
             stats["last_verified"] = moment
             transition = None
@@ -248,6 +250,21 @@ class LearnerStore:
                     return calibration(data)
             raise KeyError("No confidence rating was recorded for that check.")
 
+    def record_journey_hint(self, learner_id: str, key: str, level: int) -> None:
+        """Persist an already-authorized journey hint, without inventing a grade."""
+        with self._lock:
+            data = self.load(learner_id)
+            item = data["open_items"].get(key)
+            if item is None or not item["attempts"]:
+                raise ValueError("A verified attempt is required before a journey hint.")
+            delta = max(0, level - item["hint_level"])
+            item["hint_level"] = max(level, item["hint_level"])
+            data["topics"][item["topic"]]["hints_used"] += delta
+            data["events"] = (data["events"] + [{"id": uuid.uuid4().hex[:12],
+                "at": _iso(_now()), "skill": item["skill"], "topic": item["topic"],
+                "item": item["label"], "status": "hint", "hint_level": level, "mode": item["mode"]}])[-60:]
+            self._save(data)
+
     # ---------- policy ----------
 
     def plan(self, learner_id: str, skill: str) -> dict[str, Any]:
@@ -258,6 +275,11 @@ class LearnerStore:
                  if s["last_verified"] and now - datetime.fromisoformat(s["last_verified"]) <= STALE_AFTER}
         mine = {t: s for t, s in fresh.items() if t.startswith(skill + ".")}
         default = next((t for t in TOPICS if t.startswith(skill + ".")), None)
+        # A known assisted success needs a fresh check even with little evidence.
+        for topic, stats in mine.items():
+            if stats["pending_unassisted_check"]:
+                return self._action("unassisted_check", topic, "unassisted-evidence-checkpoint", data,
+                                    f"Your last success on {_phrase(topic)} used help. Try a fresh one with no hints to see what you can do alone.")
         if sum(s["attempts"] for s in mine.values()) < MIN_EVIDENCE:
             return self._action("start", default, None, data,
                                 "Not enough recent verified evidence for this skill yet, so the tutor makes no claim about you. Start with regular practice.")
