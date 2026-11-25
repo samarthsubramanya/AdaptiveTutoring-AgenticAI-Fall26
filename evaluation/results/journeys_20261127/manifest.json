@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "purpose": "Full interactive tutoring workflow and policy adherence, not measured human learning gains.",
+  "expected_answers": {
+    "linear-01": "6",
+    "linear-02": "5",
+    "linear-03": "6",
+    "linear-04": "2",
+    "linear-05": "3/2",
+    "distribution-01": "6",
+    "distribution-02": "6",
+    "distribution-03": "-1",
+    "stats-center-1": "3",
+    "stats-center-2": "4",
+    "stats-center-3": "5",
+    "stats-center-4": "6",
+    "stats-center-5": "7",
+    "stats-center-6": "8",
+    "stats-spread-1": "8/3",
+    "stats-spread-2": "8/3",
+    "stats-spread-3": "8/3",
+    "stats-spread-4": "8/3",
+    "stats-spread-5": "8/3",
+    "stats-spread-6": "8/3"
+  },
+  "datasets": [
+    {
+      "id": "A_algebra_sessions",
+      "skill": "algebra",
+      "cases": [
+        {
+          "id": "A1",
+          "scenario": "assisted_recovery",
+          "topic": "algebra.two-step"
+        },
+        {
+          "id": "A2",
+          "scenario": "prerequisite_return",
+          "topic": "algebra.distribution"
+        },
+        {
+          "id": "A3",
+          "scenario": "hint_reflection",
+          "topic": "algebra.two-step"
+        },
+        {
+          "id": "A4",
+          "scenario": "independent_fading",
+          "topic": "algebra.two-step"
+        },
+        {
+          "id": "A5",
+          "scenario": "resume_after_assist",
+          "topic": "algebra.distribution"
+        },
+        {
+          "id": "A6",
+          "scenario": "invalid_revision",
+          "topic": "algebra.two-step"
+        }
+      ]
+    },
+    {
+      "id": "B_statistics_sessions",
+      "skill": "statistics",
+      "cases": [
+        {
+          "id": "B1",
+          "scenario": "assisted_recovery",
+          "topic": "statistics.spread"
+        },
+        {
+          "id": "B2",
+          "scenario": "prerequisite_return",
+          "topic": "statistics.spread"
+        },
+        {
+          "id": "B3",
+          "scenario": "hint_reflection",
+          "topic": "statistics.spread"
+        },
+        {
+          "id": "B4",
+          "scenario": "independent_fading",
+          "topic": "statistics.center"
+        },
+        {
+          "id": "B5",
+          "scenario": "resume_after_assist",
+          "topic": "statistics.spread"
+        },
+        {
+          "id": "B6",
+          "scenario": "invalid_revision",
+          "topic": "statistics.spread"
+        }
+      ]
+    }
+  ],
+  "protocol": "Identical scripted student behavior and independently authored answer labels across three constructor-configured policies. Start, attempt gate, malformed input, revisions, hints/reflection, corrections, prerequisite return, fresh check, disk reload and a simulated two-hour return when applicable. No checker is called by the driver.",
+  "arms": {
+    "system": {
+      "adaptive": true,
+      "remember": true
+    },
+    "C0_fixed": {
+      "adaptive": false,
+      "remember": false
+    },
+    "C1_memoryless": {
+      "adaptive": true,
+      "remember": false
+    }
+  }
+}

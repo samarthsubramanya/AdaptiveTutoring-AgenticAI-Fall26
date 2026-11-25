@@ -1,0 +1,557 @@
+{
+  "executed_at": "2026-11-27T16:48:00.722980+00:00",
+  "source_commit": "724b381dc70806b1e93cdbe66acafb39cb3e0025",
+  "working_tree_dirty": true,
+  "manifest_sha256": "2dc2b438a108f5f21d1fa6fe9ef8d0936ebf7c617d73f61b589aa295fcfaf0f4",
+  "source_files_sha256": {
+    "tutoring/__init__.py": "830bdf351b3f033c1469da470c3ab51a97bd02530490b9b7967081796a781a14",
+    "tutoring/algebra.py": "03ba0739c17b14f7be8b2d76d874f4991eae4e4a6aa7395cc2cb5b59f21cc13a",
+    "tutoring/api.py": "0c8022617d9d47141a7b1af484a82cc32b85d5d419d5193944936fa6c5f86cdc",
+    "tutoring/custom.py": "88b57bb43a8d8b59f700a3e65d793828907c7b937cb932867659e56dc5efad24",
+    "tutoring/geometry.py": "2af513253ac569b08cc37cb8f365b00a7abb6f1209d57bde5b951e09dd0c5ff7",
+    "tutoring/inequalities.py": "5956f602c4cefe5b4da3d2a39655be42321952f35743ef9e55ef35b75403296c",
+    "tutoring/journey.py": "5ee95546bdde88eef0260159f870c72a5b4855a4fcf416901ce27d298b672482",
+    "tutoring/journey_api.py": "0fa7ea84dc29452cc4ce976f961a9645298d59ad4b1e15ff2155c593038ab2ef",
+    "tutoring/learner_api.py": "813d0963d8ed4efd520babbf32526c09d8eeffe8cc6542e97ff49104abe74c70",
+    "tutoring/learners.py": "b680155a08cf00a91871476134e559e5546a7470c3f96eb274354756efa0b21d",
+    "tutoring/linear_systems.py": "8376f88087401eef33603c13279f16a86262f137f4a382ec3040ec884419de63",
+    "tutoring/linear_systems_api.py": "05af8f8dadc5311ba6b05862dbe6a5b3b0dce5ac89f80c842864cc269ebca06b",
+    "tutoring/model.py": "892c424afb0c21e62191b96f6f04b80f0738480da3e301460df50d043c291396",
+    "tutoring/sessions.py": "d9bd58cb338561f7744b073766c89c5a362594d4c9369e8df37d08c56f670af2",
+    "tutoring/statistics.py": "3788b3e7cd2d0cfc22e1f1f58c0745f6d45f0350d78ccec8499be8bc4305f8f4",
+    "tutoring/studio_api.py": "edc2cc09f476a5f9e745786933469687e1f085e67beb26a0898a5eb094662504",
+    "tutoring/symbolic.py": "7b8227f45d7faa8b7859d95d6f5b9b69492470958f9080eff60ae0f76b57892e",
+    "evaluation/journeys/run.py": "01ce5a6aa169baf622fd70f065603a2b81492e8642d6caeef6925303f9e262e1"
+  },
+  "transport": "in-process ASGI HTTP via FastAPI TestClient; production router and session engine",
+  "summary": [
+    {
+      "dataset": "A_algebra_sessions",
+      "arm": "system",
+      "scenarios": 6,
+      "errors": 0,
+      "metrics": {
+        "attempt_gate": {
+          "passed": 6,
+          "applicable": 6,
+          "rate": 1.0
+        },
+        "ungraded_safety": {
+          "passed": 6,
+          "applicable": 6,
+          "rate": 1.0
+        },
+        "revision_safety": {
+          "passed": 6,
+          "applicable": 6,
+          "rate": 1.0
+        },
+        "graduated_hint": {
+          "passed": 4,
+          "applicable": 4,
+          "rate": 1.0
+        },
+        "assisted_not_independent": {
+          "passed": 4,
+          "applicable": 4,
+          "rate": 1.0
+        },
+        "fresh_unaided_check": {
+          "passed": 4,
+          "applicable": 4,
+          "rate": 1.0
+        },
+        "completion": {
+          "passed": 6,
+          "applicable": 6,
+          "rate": 1.0
+        },
+        "return_session_retrieval": {
+          "passed": 4,
+          "applicable": 4,
+          "rate": 1.0
+        },
+        "disk_memory_retained": {
+          "passed": 4,
+          "applicable": 4,
+          "rate": 1.0
+        },
+        "return_item_fresh": {
+          "passed": 4,
+          "applicable": 4,
+          "rate": 1.0
+        },
+        "prerequisite_selection": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        },
+        "return_to_original": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        },
+        "reflection_gate": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        },
+        "hint_escalation": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        },
+        "support_fading": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        },
+        "persistent_checkpoint": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        }
+      }
+    },
+    {
+      "dataset": "A_algebra_sessions",
+      "arm": "C0_fixed",
+      "scenarios": 6,
+      "errors": 0,
+      "metrics": {
+        "attempt_gate": {
+          "passed": 6,
+          "applicable": 6,
+          "rate": 1.0
+        },
+        "ungraded_safety": {
+          "passed": 6,
+          "applicable": 6,
+          "rate": 1.0
+        },
+        "revision_safety": {
+          "passed": 6,
+          "applicable": 6,
+          "rate": 1.0
+        },
+        "graduated_hint": {
+          "passed": 4,
+          "applicable": 4,
+          "rate": 1.0
+        },
+        "assisted_not_independent": {
+          "passed": 4,
+          "applicable": 4,
+          "rate": 1.0
+        },
+        "fresh_unaided_check": {
+          "passed": 0,
+          "applicable": 4,
+          "rate": 0.0
+        },
+        "completion": {
+          "passed": 6,
+          "applicable": 6,
+          "rate": 1.0
+        },
+        "return_session_retrieval": {
+          "passed": 0,
+          "applicable": 4,
+          "rate": 0.0
+        },
+        "disk_memory_retained": {
+          "passed": 0,
+          "applicable": 4,
+          "rate": 0.0
+        },
+        "return_item_fresh": {
+          "passed": 4,
+          "applicable": 4,
+          "rate": 1.0
+        },
+        "prerequisite_selection": {
+          "passed": 0,
+          "applicable": 1,
+          "rate": 0.0
+        },
+        "return_to_original": {
+          "passed": 0,
+          "applicable": 1,
+          "rate": 0.0
+        },
+        "reflection_gate": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        },
+        "hint_escalation": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        },
+        "support_fading": {
+          "passed": 0,
+          "applicable": 1,
+          "rate": 0.0
+        },
+        "persistent_checkpoint": {
+          "passed": 0,
+          "applicable": 1,
+          "rate": 0.0
+        }
+      }
+    },
+    {
+      "dataset": "A_algebra_sessions",
+      "arm": "C1_memoryless",
+      "scenarios": 6,
+      "errors": 0,
+      "metrics": {
+        "attempt_gate": {
+          "passed": 6,
+          "applicable": 6,
+          "rate": 1.0
+        },
+        "ungraded_safety": {
+          "passed": 6,
+          "applicable": 6,
+          "rate": 1.0
+        },
+        "revision_safety": {
+          "passed": 6,
+          "applicable": 6,
+          "rate": 1.0
+        },
+        "graduated_hint": {
+          "passed": 4,
+          "applicable": 4,
+          "rate": 1.0
+        },
+        "assisted_not_independent": {
+          "passed": 4,
+          "applicable": 4,
+          "rate": 1.0
+        },
+        "fresh_unaided_check": {
+          "passed": 3,
+          "applicable": 4,
+          "rate": 0.75
+        },
+        "completion": {
+          "passed": 6,
+          "applicable": 6,
+          "rate": 1.0
+        },
+        "return_session_retrieval": {
+          "passed": 0,
+          "applicable": 4,
+          "rate": 0.0
+        },
+        "disk_memory_retained": {
+          "passed": 0,
+          "applicable": 4,
+          "rate": 0.0
+        },
+        "return_item_fresh": {
+          "passed": 4,
+          "applicable": 4,
+          "rate": 1.0
+        },
+        "prerequisite_selection": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        },
+        "return_to_original": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        },
+        "reflection_gate": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        },
+        "hint_escalation": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        },
+        "support_fading": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        },
+        "persistent_checkpoint": {
+          "passed": 0,
+          "applicable": 1,
+          "rate": 0.0
+        }
+      }
+    },
+    {
+      "dataset": "B_statistics_sessions",
+      "arm": "system",
+      "scenarios": 6,
+      "errors": 0,
+      "metrics": {
+        "attempt_gate": {
+          "passed": 6,
+          "applicable": 6,
+          "rate": 1.0
+        },
+        "ungraded_safety": {
+          "passed": 6,
+          "applicable": 6,
+          "rate": 1.0
+        },
+        "revision_safety": {
+          "passed": 6,
+          "applicable": 6,
+          "rate": 1.0
+        },
+        "graduated_hint": {
+          "passed": 4,
+          "applicable": 4,
+          "rate": 1.0
+        },
+        "assisted_not_independent": {
+          "passed": 4,
+          "applicable": 4,
+          "rate": 1.0
+        },
+        "fresh_unaided_check": {
+          "passed": 4,
+          "applicable": 4,
+          "rate": 1.0
+        },
+        "completion": {
+          "passed": 6,
+          "applicable": 6,
+          "rate": 1.0
+        },
+        "return_session_retrieval": {
+          "passed": 4,
+          "applicable": 4,
+          "rate": 1.0
+        },
+        "disk_memory_retained": {
+          "passed": 4,
+          "applicable": 4,
+          "rate": 1.0
+        },
+        "return_item_fresh": {
+          "passed": 4,
+          "applicable": 4,
+          "rate": 1.0
+        },
+        "prerequisite_selection": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        },
+        "return_to_original": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        },
+        "reflection_gate": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        },
+        "hint_escalation": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        },
+        "support_fading": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        },
+        "persistent_checkpoint": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        }
+      }
+    },
+    {
+      "dataset": "B_statistics_sessions",
+      "arm": "C0_fixed",
+      "scenarios": 6,
+      "errors": 0,
+      "metrics": {
+        "attempt_gate": {
+          "passed": 6,
+          "applicable": 6,
+          "rate": 1.0
+        },
+        "ungraded_safety": {
+          "passed": 6,
+          "applicable": 6,
+          "rate": 1.0
+        },
+        "revision_safety": {
+          "passed": 6,
+          "applicable": 6,
+          "rate": 1.0
+        },
+        "graduated_hint": {
+          "passed": 4,
+          "applicable": 4,
+          "rate": 1.0
+        },
+        "assisted_not_independent": {
+          "passed": 4,
+          "applicable": 4,
+          "rate": 1.0
+        },
+        "fresh_unaided_check": {
+          "passed": 0,
+          "applicable": 4,
+          "rate": 0.0
+        },
+        "completion": {
+          "passed": 6,
+          "applicable": 6,
+          "rate": 1.0
+        },
+        "return_session_retrieval": {
+          "passed": 0,
+          "applicable": 4,
+          "rate": 0.0
+        },
+        "disk_memory_retained": {
+          "passed": 0,
+          "applicable": 4,
+          "rate": 0.0
+        },
+        "return_item_fresh": {
+          "passed": 4,
+          "applicable": 4,
+          "rate": 1.0
+        },
+        "prerequisite_selection": {
+          "passed": 0,
+          "applicable": 1,
+          "rate": 0.0
+        },
+        "return_to_original": {
+          "passed": 0,
+          "applicable": 1,
+          "rate": 0.0
+        },
+        "reflection_gate": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        },
+        "hint_escalation": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        },
+        "support_fading": {
+          "passed": 0,
+          "applicable": 1,
+          "rate": 0.0
+        },
+        "persistent_checkpoint": {
+          "passed": 0,
+          "applicable": 1,
+          "rate": 0.0
+        }
+      }
+    },
+    {
+      "dataset": "B_statistics_sessions",
+      "arm": "C1_memoryless",
+      "scenarios": 6,
+      "errors": 0,
+      "metrics": {
+        "attempt_gate": {
+          "passed": 6,
+          "applicable": 6,
+          "rate": 1.0
+        },
+        "ungraded_safety": {
+          "passed": 6,
+          "applicable": 6,
+          "rate": 1.0
+        },
+        "revision_safety": {
+          "passed": 6,
+          "applicable": 6,
+          "rate": 1.0
+        },
+        "graduated_hint": {
+          "passed": 4,
+          "applicable": 4,
+          "rate": 1.0
+        },
+        "assisted_not_independent": {
+          "passed": 4,
+          "applicable": 4,
+          "rate": 1.0
+        },
+        "fresh_unaided_check": {
+          "passed": 3,
+          "applicable": 4,
+          "rate": 0.75
+        },
+        "completion": {
+          "passed": 6,
+          "applicable": 6,
+          "rate": 1.0
+        },
+        "return_session_retrieval": {
+          "passed": 0,
+          "applicable": 4,
+          "rate": 0.0
+        },
+        "disk_memory_retained": {
+          "passed": 0,
+          "applicable": 4,
+          "rate": 0.0
+        },
+        "return_item_fresh": {
+          "passed": 4,
+          "applicable": 4,
+          "rate": 1.0
+        },
+        "prerequisite_selection": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        },
+        "return_to_original": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        },
+        "reflection_gate": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        },
+        "hint_escalation": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        },
+        "support_fading": {
+          "passed": 1,
+          "applicable": 1,
+          "rate": 1.0
+        },
+        "persistent_checkpoint": {
+          "passed": 0,
+          "applicable": 1,
+          "rate": 0.0
+        }
+      }
+    }
+  ]
+}
