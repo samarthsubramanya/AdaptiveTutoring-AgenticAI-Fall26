@@ -1,5 +1,5 @@
 export type Subject = "algebra" | "inequalities" | "statistics" | "geometry";
-export type View = "overview" | "practice" | "research" | "history";
+export type View = "overview" | "practice" | "research" | "history" | "journey";
 export type Entry = {
   id: string;
   topic: Subject;

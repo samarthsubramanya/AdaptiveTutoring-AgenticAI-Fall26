@@ -30,3 +30,6 @@ frontend/*.tsbuildinfo
 
 # Learner memory (STUDENT.md per learner): personal data, never commit
 learning/data/students/
+
+# Local Python environment may also be an ignored worktree symlink
+/.venv

@@ -13,11 +13,13 @@ import type { Entry, Skill, Subject, View } from "./lib/types";
 import { useResearch } from "./hooks/useResearch";
 import Overview from "./pages/Overview";
 import Practice from "./pages/Practice";
+import Journey from "./pages/Journey";
 import Research from "./pages/Research";
 import History from "./pages/History";
 
 const nav: { view: View; label: string; icon: IconName }[] = [
   { view: "overview", label: "Overview", icon: "House" },
+  { view: "journey", label: "Learning journey", icon: "Sparkles" },
   { view: "practice", label: "Math studio", icon: "BookOpen" },
   { view: "research", label: "Research desk", icon: "Compass" },
   { view: "history", label: "Practice journal", icon: "History" },
@@ -351,6 +353,9 @@ export default function App() {
               record={record}
               learnerId={learnerId}
             />
+          )}
+          {current.view === "journey" && (
+            <Journey key={learnerId} learnerId={learnerId} />
           )}
           {current.view === "research" && <Research state={research} />}
           {current.view === "history" && (

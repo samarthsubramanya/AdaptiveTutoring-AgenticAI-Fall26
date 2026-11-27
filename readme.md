@@ -6,7 +6,7 @@ KernelAI is an agentic runtime that turns a user request into independently sche
 
 - **Concurrent orchestration:** one supervisor per admitted request, configurable request/task concurrency, duplicate active request-ID rejection, and lifecycle cleanup.
 - **Agent runtime:** asynchronous worker loops, hosted OpenAI-compatible LLM calls, a local Ollama caller, tool discovery, and skill-based tool access. The application launcher uses the hosted model path.
-- **Tools and skills:** registered `web_search`, `text2sql`, and bank-scoped `algebra` skills; an MCP server exposes web search, PostgreSQL queries restricted to `SELECT`/`WITH`, guarded shell execution, algebra problem discovery, and SymPy answer verification. Coding/teaching skill documents are included in `vault/`; those vault documents are not registered production skills in the current registry.
+- **Tools and skills:** registered mathematics, teaching, web-search and optional database skills; deterministic math tools and server-controlled journey tools are exposed over MCP. Canonical math prompts live in `vault/skills/math/`, linked through its Mathematics domain. Coding documents remain vault resources; only entries in `skills/registry.py` are runtime-delegatable.
 - **Algebra tutor:** guided practice with eight predefined equations, graduated hints, retries, and prerequisite review; plus LLM-assisted custom questions with interpretation review, generated solutions/explanations/hints, and independent SymPy verification. Custom cases cover linear/quadratic equations, polynomial simplification, expansion, factoring, and derivatives.
 - **Observability:** structured request/task/worker/tool events, argument-secret redaction, bounded trace previews, terminal and JSONL sinks, indexed in-memory event histories, and frontend lifecycle projections.
 - **API and UI:** FastAPI request submission, status/activity/event endpoints, a Streamlit chat interface, a live observability dashboard, and a read-only offline learning dashboard.
@@ -342,3 +342,17 @@ evidence, not a mastery certificate.
 ```bash
 python -m pytest -q tests/test_geometry.py tests/test_learners.py
 ```
+
+
+## Connected interactive tutoring and session evaluation
+
+Open the React **Learning journey** for server-controlled attempts, graduated
+hints, prerequisite review/return, fresh unaided checks, and evidence-informed
+future sessions. This is distinct from isolated tool checking in Math studio.
+The preserved Streamlit pages and API remain available.
+
+See [verification steps and evaluation boundaries](docs/interactive-tutoring-verification.md)
+and [the full-session evaluation results](evaluation/results/journeys_20261127/report.md).
+The comparison runs multi-turn algebra and statistics scenarios through the
+production HTTP session engine with fixed and memoryless policy controls. It
+does not claim human learning gains or replace earlier B1/B2 model results.

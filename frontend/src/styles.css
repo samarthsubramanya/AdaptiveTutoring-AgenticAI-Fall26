@@ -2583,3 +2583,163 @@ nav a.active svg {
     display: none;
   }
 }
+
+/* The connected tutoring session, driven by authoritative server state. */
+.journey-start {
+  padding: 32px;
+  max-width: 850px;
+}
+.journey-start h2 {
+  margin: 15px 0;
+  font: 30px var(--serif);
+}
+.journey-start > p {
+  color: #6f8069;
+  font-size: 13px;
+}
+.journey-start label,
+.journey-reflection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+  color: #59744e;
+}
+.journey-start .fine-print {
+  margin: 22px 0;
+}
+.journey-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin: 4px 0 26px;
+  gap: 12px;
+}
+.journey-steps > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  padding: 12px 0;
+  border-bottom: 2px solid #e4eadd;
+  color: #84927a;
+}
+.journey-steps b {
+  border: 1px solid #d9e4d1;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  font-weight: 500;
+  font-size: 10px;
+}
+.journey-steps .active {
+  color: #345f3a;
+  border-color: #749965;
+}
+.journey-steps .active b {
+  background: #e7efdf;
+}
+.journey-problem {
+  padding: 28px;
+  margin-top: 20px;
+}
+.journey-problem h2 {
+  font: 29px/1.5 var(--serif);
+  margin: 30px 0;
+  color: #365c3e;
+  overflow-wrap: anywhere;
+}
+.journey-problem > p {
+  font-size: 12px;
+  color: #6d8065;
+  margin-bottom: 22px;
+}
+.journey-problem form > label {
+  display: block;
+  font-size: 12px;
+  color: #5f7955;
+  margin: 0 0 9px;
+}
+.journey-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-top: 25px;
+  flex-wrap: wrap;
+}
+.journey-reflection {
+  margin-top: 15px;
+}
+.journey-reflection .secondary {
+  align-self: flex-start;
+}
+.journey-trace {
+  margin: 20px 0;
+  padding: 20px;
+}
+.journey-trace summary {
+  font-size: 12px;
+  cursor: pointer;
+}
+.journey-trace > div {
+  display: flex;
+  gap: 12px;
+  border-top: 1px solid #eef1e7;
+  padding: 13px 0;
+  font-size: 11px;
+}
+.journey-trace > div > span {
+  color: #8b9b80;
+  min-width: 15px;
+}
+.journey-trace small {
+  display: block;
+  color: #7b8e70;
+  line-height: 1.7;
+  margin-top: 4px;
+}
+.journey-topic {
+  border-top: 1px solid #d8e2cd;
+  padding-top: 16px;
+  margin-top: 16px;
+  font-size: 12px;
+}
+.journey-topic p {
+  font-size: 11px;
+  margin: 8px 0;
+}
+.journey-topic small {
+  font-size: 10px;
+}
+.reference-card .text-button {
+  font-size: 10px;
+  margin-top: 15px;
+}
+@media (max-width: 700px) {
+  .journey-steps {
+    grid-template-columns: 1fr 1fr;
+    gap: 5px 12px;
+  }
+  .journey-steps > span {
+    font-size: 10px;
+  }
+  .journey-start,
+  .journey-problem {
+    padding: 22px;
+  }
+  .journey-problem h2 {
+    font-size: 25px;
+  }
+  .journey-start h2 {
+    font-size: 27px;
+  }
+  .journey-start .form-two {
+    grid-template-columns: 1fr;
+  }
+}
+.journey-hero-cta {
+  margin-top: 22px;
+  font-size: 11px;
+}

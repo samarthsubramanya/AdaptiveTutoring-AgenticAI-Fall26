@@ -85,3 +85,19 @@ polling; `lib/` holds contracts, networking, storage and pure helpers. The backe
 retains authoritative grading. Raw model content is never rendered as HTML;
 reasoning/control fragments are filtered in the reading view and retained in the
 explicit raw-output view. Fonts fall back to installed system fonts offline.
+
+
+## Learning journey
+
+The new Learning journey view is the connected adaptive tutoring workflow.
+The server selects the teaching mode and next problem; browser controls cannot
+assign correctness, enable forbidden hints, or replay solved answers. Active
+sessions resume from sessionStorage IDs; verified learner evidence remains in
+STUDENT.md across server restarts.
+
+Follow [the concrete verification walk-through](../docs/interactive-tutoring-verification.md).
+The existing Math studio remains available for individual checks and custom
+problem practice. The measured session comparison is documented separately in
+`evaluation/results/journeys_20261127/report.md`.
+
+Use `./start-all.sh` from the repository root to launch React, API, MCP and Streamlit together. Ctrl+C stops the processes started by the launcher.

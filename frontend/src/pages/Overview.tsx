@@ -28,6 +28,11 @@ export default function Overview({
             <br />
             Let’s find your next one.
           </p>
+          <a className="primary journey-hero-cta" href="#/journey">
+            <Icon name="Sparkles" size={16} />
+            Start a learning journey
+            <Icon name="ArrowRight" size={16} />
+          </a>
         </div>
         <div className="hero-art" aria-hidden="true">
           <div className="orbit orbit-one" />
