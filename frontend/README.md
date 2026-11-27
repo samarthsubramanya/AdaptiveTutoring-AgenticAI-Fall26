@@ -1,7 +1,8 @@
-# Kernel learning studio
+# KernelAI · React Learning Studio
 
-A separate React + TypeScript workspace for mathematics practice and agent research.
-The existing `ui/` Streamlit app and `start.sh` launcher are preserved.
+A responsive React + TypeScript workspace for adaptive mathematics tutoring, verified practice, and agent research. It shares the FastAPI backend with the companion Streamlit interface.
+
+![Learning journey with a fresh unaided check](../docs/screenshots/fresh-check.jpg)
 
 ## Start locally
 
@@ -45,8 +46,9 @@ alongside the studio, reuse the running API/MCP and start only Streamlit:
 API_BASE_URL=http://127.0.0.1:8000 .venv/bin/python -m streamlit run ui/app.py
 ```
 
-## Features and boundaries
+## Workspace features
 
+- Learning journey: server-controlled attempts, graduated hints, reflection, prerequisite review/return, fresh unaided checks, and persistent learner evidence.
 - Overview and server-backed practice catalogue; accurate browser-local counts.
 - Guided algebra: original sessions, hints, revision checks, and next problems.
 - Inequalities: edit linear/quadratic problems, check complete intervals, and view
@@ -55,8 +57,7 @@ API_BASE_URL=http://127.0.0.1:8000 .venv/bin/python -m streamlit run ui/app.py
   preview, and independently checked answers. The first 24 values are plotted.
 - Research: async submission, serialized polling, bounded backoff, pause/resume,
   reconnect on reload, task activity, Markdown/GFM tables, and raw output access.
-- Journal: up to 100 locally stored checks, export, and clear with undo. This is
-  browser history, not a persistent learner profile or mastery measure.
+- Journal: up to 100 browser-local checks, export, clear with undo, and access to the separate server-backed learner record.
 - Responsive desktop/sidebar and mobile/drawer layouts, labelled inputs, live
   feedback, keyboard focus, and reduced-motion support.
 
@@ -64,7 +65,7 @@ Switching subjects aborts stale grading responses. Leaving the research page
 keeps its request tracked at app level; closing the app stops browser polling but
 does not cancel server work. Polling pauses after 15 minutes and can be resumed.
 Neither API health nor the “ready” badge establishes model/provider availability.
-The API's existing in-memory state disappears on restart.
+Active sessions disappear on API restart; verified learner evidence in `STUDENT.md` persists and informs the next session.
 
 ## Build and validation
 
@@ -77,8 +78,7 @@ python -m pytest -q tests/test_studio.py tests/test_algebra.py tests/test_algebr
 The build creates `frontend/dist/`. In deployment, serve these static files with
 SPA fallback and reverse-proxy `/api` to the Python server. Vite's development
 proxy is not part of the static build; `vite preview` alone does not provide the
-API proxy. The application is intended for a local course demo: adding public
-authentication, persistent sessions, and deployment hardening is separate work.
+API proxy. The application runs locally with pseudonymous learner IDs and no public multi-user authentication. Keep API and MCP access on trusted interfaces.
 
 `components/` holds shared visuals; `pages/` holds screens; `hooks/` owns research
 polling; `lib/` holds contracts, networking, storage and pure helpers. The backend
@@ -89,14 +89,14 @@ explicit raw-output view. Fonts fall back to installed system fonts offline.
 
 ## Learning journey
 
-The new Learning journey view is the connected adaptive tutoring workflow.
+The Learning journey view provides the connected adaptive tutoring workflow.
 The server selects the teaching mode and next problem; browser controls cannot
 assign correctness, enable forbidden hints, or replay solved answers. Active
 sessions resume from sessionStorage IDs; verified learner evidence remains in
 STUDENT.md across server restarts.
 
 Follow [the concrete verification walk-through](../docs/interactive-tutoring-verification.md).
-The existing Math studio remains available for individual checks and custom
+Math studio provides individual checks and custom
 problem practice. The measured session comparison is documented separately in
 `evaluation/results/journeys_20261127/report.md`.
 

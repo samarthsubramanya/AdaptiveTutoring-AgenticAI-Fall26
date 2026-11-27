@@ -1,358 +1,218 @@
-# KernelAI
+# KernelAI · Learning Studio
 
-KernelAI is an agentic runtime that turns a user request into independently scheduled tasks. An orchestrator admits requests, a dedicated supervisor delegates work to skill-equipped workers, and runtime events make execution visible through a web interface. An offline learning pipeline evaluates recorded executions and proposes policy candidates for manual release.
+**An adaptive mathematics tutor with verified answers, persistent learner evidence, and an observable agent runtime.**
 
-## Implemented features
+KernelAI guides learners through an entire practice cycle: try a problem, reflect on feedback, receive graduated help, revisit a prerequisite when needed, and demonstrate independent success on a fresh question. A React workspace brings tutoring, mathematical tools, web research, and a practice journal together. The companion Streamlit interface remains available.
 
-- **Concurrent orchestration:** one supervisor per admitted request, configurable request/task concurrency, duplicate active request-ID rejection, and lifecycle cleanup.
-- **Agent runtime:** asynchronous worker loops, hosted OpenAI-compatible LLM calls, a local Ollama caller, tool discovery, and skill-based tool access. The application launcher uses the hosted model path.
-- **Tools and skills:** registered mathematics, teaching, web-search and optional database skills; deterministic math tools and server-controlled journey tools are exposed over MCP. Canonical math prompts live in `vault/skills/math/`, linked through its Mathematics domain. Coding documents remain vault resources; only entries in `skills/registry.py` are runtime-delegatable.
-- **Algebra tutor:** guided practice with eight predefined equations, graduated hints, retries, and prerequisite review; plus LLM-assisted custom questions with interpretation review, generated solutions/explanations/hints, and independent SymPy verification. Custom cases cover linear/quadratic equations, polynomial simplification, expansion, factoring, and derivatives.
-- **Observability:** structured request/task/worker/tool events, argument-secret redaction, bounded trace previews, terminal and JSONL sinks, indexed in-memory event histories, and frontend lifecycle projections.
-- **API and UI:** FastAPI request submission, status/activity/event endpoints, a Streamlit chat interface, a live observability dashboard, and a read-only offline learning dashboard.
-- **Offline learning:** trace loading, deterministic metrics, semantic/batched evaluation, policy inspection, candidate creation, and a learning-cycle CLI. Candidate promotion is a separate manual release operation.
-- **Existing verification coverage:** tracer/sink and tool-observability tests, runtime/API integration tests, concurrent-request tests, and historical single-request/50-task stress artifacts.
+[Quick start](#quick-start) · [Learning experience](#learning-experience) · [Mathematics skills](#mathematics-skills) · [Evaluation](#evaluation) · [Documentation](#documentation)
 
-## Probability Lab (work in progress)
+![KernelAI learning journey showing a fresh unaided algebra check](docs/screenshots/fresh-check.jpg)
 
-Explore coin and dice experiments with theoretical distributions, simulated
-results, and convergence charts. See [the Probability Lab guide](docs/probability-lab.md).
+## Learning experience
 
-## Setup from scratch
+The **Learning journey** is a connected, server-controlled tutoring session. The backend owns the problem, teaching mode, answer verification, and progression rules.
 
-### 1. Prerequisites
+1. **Attempt first.** Learners try the problem before requesting help. Invalid or unsupported answers remain ungraded.
+2. **Reflect and receive help.** Conceptual, strategic, and procedural hints provide increasing support. Deeper hints require a short reflection.
+3. **Review and return.** Repeated difficulty triggers prerequisite practice, followed by a return to the original problem.
+4. **Check independence.** An assisted success leads to a different problem with hints disabled. Solved items cannot be replayed as fresh evidence.
+5. **Adapt future practice.** Verified attempts and hints inform support fading, returning-learner recall, and subsequent sessions.
 
-Use macOS or Linux, or a Bash-capable environment such as WSL on Windows. Install:
+Learner evidence is saved in a server-side `STUDENT.md` record. Session revisions protect against duplicate or stale actions, and page reloads restore the active journey. Learner records survive server restarts; active sessions are transient and expire after one idle hour. The finite problem bank reports exhaustion rather than silently reusing a solved item as new assessment evidence.
 
-- Git.
-- **Python 3.11 to 3.14**, including `venv` and `pip`. The setup below was verified with Python 3.14.10 on macOS; on Python 3.15 the `pyarrow` dependency failed to build. Make sure `python3 --version` reports a supported version.
-- Bash and `curl`, used by `start.sh`.
-- Access to an OpenAI-compatible LLM endpoint and its API key for general agent/chat, learning, and LLM-assisted algebra requests. Configure all three `ASU_LLM_*` values in `.env`. The supplied template targets the ASU gateway.
-- A running PostgreSQL database and connection credentials **if using `text2sql`**. Web-only requests do not require a database. There is no bundled database server, schema migration, or seed dataset.
+### Prerequisite review
 
-The launcher uses ports **8000** (API), **8001** (MCP), and **8501** (UI); keep them available.
+The tutor moves from difficulty to a simpler prerequisite, then returns the learner to the original task.
 
-### 2. Clone the repository
+![KernelAI prerequisite review after repeated difficulty on a two-step equation](docs/screenshots/prerequisite.jpg)
+
+### Workspace
+
+| Area | What it provides |
+|---|---|
+| **Learning journey** | Adaptive practice across algebra, inequalities, statistics, geometry, and linear systems. |
+| **Math studio** | Individual answer checks, guided algebra, custom symbolic problems, and subject-specific practice. |
+| **Research desk** | Web research through the Supervisor, task workers, and MCP tools, with task activity and reconnectable request tracking. |
+| **Practice journal** | Browser-local check history, export, and a view of the server-backed learner record. |
+| **Probability Lab** | Coin and dice experiments, theoretical distributions, simulation results, and convergence charts in Streamlit. |
+| **Observability** | Request, task, worker, and tool events, execution traces, and runtime status. |
+| **Offline learning** | Trace evaluation, policy inspection, and candidate generation with explicit manual release. |
+
+<details>
+<summary>View the mobile learning journey</summary>
+
+<img src="docs/screenshots/mobile.jpg" alt="KernelAI learning journey on a mobile screen" width="390" />
+
+</details>
+
+## Mathematics skills
+
+Deterministic tools check mathematical answers independently of model-generated prose. Supported capabilities include:
+
+| Subject | Capabilities |
+|---|---|
+| **Algebra** | Linear and quadratic equations, simplification, factoring, expansion, and polynomial derivatives. |
+| **Inequalities** | Real constant, linear, and quadratic inequalities with complete interval-set checking. |
+| **Statistics** | Descriptive measures with explicit population/sample conventions, including variance and standard deviation. |
+| **Geometry** | Area, perimeter, circles, Pythagorean theorem, triangle angles, and coordinate geometry. |
+| **Linear systems** | Two-variable systems, exact answer checking, hints, and worked elimination steps. |
+| **Probability** | Interactive coin and dice simulations and comparison with theoretical distributions. |
+
+Custom LLM-assisted algebra includes interpretation review before verification. The mathematical checker verifies the reviewed expression or equation; model explanations and word-problem translations are not automatically certified. Probability simulations are separate from the scored tutoring journeys.
+
+### Linked skills vault
+
+Open [`vault/`](vault/) with **Obsidian → Open folder as vault**, then follow [`skills/REGISTRY.md`](vault/skills/REGISTRY.md) → [**mathematics**](vault/skills/math/DOMAIN.md). Use **Graph view** (`Cmd+G` on macOS) to explore the links.
+
+The mathematics domain connects 12 operational notes covering subject practice, symbolic operations, solution checking, and interactive tutoring. Teaching links connect attempt-first retrieval, progressive hints, prerequisite review, support fading, and unaided evidence. Runtime-delegatable skills are explicitly registered in [`skills/registry.py`](skills/registry.py); canonical mathematics prompts live in [`vault/skills/math/`](vault/skills/math/).
+
+## Quick start
+
+### Prerequisites
+
+- **Python 3.11–3.14** with `venv` and `pip`.
+- **Node.js 22.12+** and npm, using a version supported by Vite 8.
+- Git, Bash, and macOS, Linux, or WSL.
+- An OpenAI-compatible endpoint and model credentials for research and LLM-assisted custom questions. Deterministic tutoring and its session evaluation need no model key.
+
+### Install
 
 ```bash
 git clone https://github.com/samarthsubramanya/AdaptiveTutoring-AgenticAI-Fall26.git
 cd AdaptiveTutoring-AgenticAI-Fall26
-```
-
-For a private repository, authenticate to GitHub first. Run the remaining commands from this repository root.
-
-### 3. Create a virtual environment and install dependencies
-
-```bash
-python3 --version
+git switch samarth/learning-studio
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
-python -m pip check
-```
-
-If your default `python3` is outside that range, substitute a supported interpreter, for example `python3.14 -m venv .venv`. The launcher expects the environment to be named `.venv` in the repository root and activates it automatically.
-
-### 4. Configure the environment
-
-```bash
+npm --prefix frontend ci
 cp .env.example .env
-mkdir -p ../kernelai-workspace
 ```
 
-Edit `.env` with your actual values. The following shows the relevant settings; replace the key and absolute workspace path. Add `DATABASE_URL` when using SQL, because it is required by the SQL tool but is currently absent from `.env.example`.
+For research and model-assisted features, edit the root `.env`:
 
 ```dotenv
 ASU_LLM_API_KEY=your-api-key
 ASU_LLM_BASE_URL=https://openai.rc.asu.edu/v1
-ASU_LLM_MODEL=glm-5-3-flash
-MCP_SERVER_URL=http://localhost:8001/mcp
+ASU_LLM_MODEL=your-tool-capable-model
+MCP_SERVER_URL=http://127.0.0.1:8001/mcp
 KERNELAI_AGENT=generic
-SHELL_WORKSPACE=/absolute/path/to/kernelai-workspace
+SHELL_WORKSPACE=/absolute/path/to/an/existing/workspace
 ```
 
-| Setting | Purpose |
-|---|---|
-| `ASU_LLM_API_KEY` | Credential for the hosted model endpoint. |
-| `ASU_LLM_BASE_URL` | OpenAI-compatible API base URL; adjust for your provider. |
-| `ASU_LLM_MODEL` | Tool-capable model available to your account. |
-| `MCP_SERVER_URL` | MCP endpoint used by task workers. |
-| `KERNELAI_AGENT` | Keep `generic`; it is the implemented agent backend. |
-| `SHELL_WORKSPACE` | Existing directory used as the shell tool's workspace. |
+Use your provider's endpoint and an available model. Keep credentials server-side in the ignored `.env` file; never place them in `VITE_` variables. Restart the Python services after changing configuration.
 
-The backend loads `.env` automatically. Keep credentials in the ignored `.env` file. The template also contains `KERNELAI_VAULT_PATH`, but the current runtime does not read it. `skills/registry.py` registers the `web_search` prompts from fixed paths under `vault/skills/`; changing the variable does not register the vault's coding or teaching skills. The startup script sets `API_BASE_URL` for the UI automatically.
-
- Prompts and integration tests mentioning `customers`, `products`, or `orders` assume those tables have been provisioned externally. We also have placeholders for database access to provide knowledge from database sets of questions, However, it has not been validated yet. This would allow for private questions and datasets to be used for answering queries.
-
-### 5. Start KernelAI
+### Launch
 
 ```bash
-STREAMLIT_SERVER_HEADLESS=true bash start.sh
+./start-all.sh
 ```
 
-`STREAMLIT_SERVER_HEADLESS=true` skips Streamlit's first-run email prompt and automatic browser opening; you still open the UI in your browser. This avoids an interactive prompt blocking the launcher's UI readiness check on a new installation. After Streamlit has already been initialized, `bash start.sh` also works without that setting.
-
-The script activates `.venv`, starts MCP, starts the API, waits for the API and UI HTTP checks, and prints the service URLs. Keep this terminal open. Press **Ctrl+C** to stop all three services.
+The launcher starts React, FastAPI, MCP, and Streamlit. Keep the terminal open; **Ctrl+C** stops the processes it started.
 
 | Service | Address |
 |---|---|
-| Chat UI and dashboard pages | <http://127.0.0.1:8501> |
-| API | <http://127.0.0.1:8000> |
-| Interactive API documentation | <http://127.0.0.1:8000/docs> |
-| MCP endpoint | <http://localhost:8001/mcp> |
+| **React Learning Studio** | [127.0.0.1:5173](http://127.0.0.1:5173) |
+| **Learning journey** | [127.0.0.1:5173/#/journey](http://127.0.0.1:5173/#/journey) |
+| **API documentation** | [127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) |
+| **Streamlit** | [127.0.0.1:8501](http://127.0.0.1:8501) |
+| **MCP tools** | `http://127.0.0.1:8001/mcp` — protocol endpoint |
 
-Use the Streamlit page selector to open **Observability**, **Offline Learning**, or **Algebra Tutor**. The MCP endpoint is a protocol endpoint, not a browser dashboard. The MCP process binds to `0.0.0.0:8001` in the current implementation; the API and UI launcher addresses are loopback-only.
+Use `./start-studio.sh` for React, API, and MCP only. Use `bash start.sh` for the Streamlit-based stack. Run one launcher at a time with the default ports. Port overrides are `KERNEL_API_PORT`, `KERNEL_MCP_PORT`, `KERNEL_UI_PORT`, and, with `start-all.sh`, `KERNEL_STREAMLIT_PORT`. Set `KERNEL_PYTHON` to use an existing Python environment.
 
-### 6. Check the installation
+### Try a complete tutoring session
 
-In a second terminal, return to the repository root and activate the environment:
+1. Open **Learning journey** and switch to a fresh learner ID in the sidebar.
+2. Select **Statistics → Spread (variance, standard deviation)** and begin. The first problem asks for the population variance of `1, 3, 5`.
+3. Submit `0`, request a hint, and reflect before requesting deeper help.
+4. Submit `0` again and select **Review prerequisite**. Answer the mean question with `3`.
+5. Continue back to the original problem and answer `8/3`.
+6. Continue to a fresh unaided check. Reload the page to verify session recovery, and open **Read your STUDENT.md** to inspect saved evidence.
+
+See the [verification guide](docs/interactive-tutoring-verification.md) for the full walkthrough, including hint gating and support fading.
+
+## Architecture
+
+```text
+React Learning Studio / Streamlit
+              │
+           FastAPI
+              ├── Journey engine ── Mathematical verification
+              │         └────────── Learner evidence (STUDENT.md)
+              │
+              └── Orchestrator → Supervisor → Task workers → MCP tools
+                                      │                      │
+                                  Skill registry ←── Linked skills vault
+                                      │
+                              Events and execution traces
+                                      │
+                              Offline policy evaluation
+```
+
+Journey tools exposed over MCP call the same authoritative HTTP session engine used by the frontend. The runtime schedules concurrent requests and tasks, while structured events expose their lifecycle. Offline evaluation produces policy candidates; releasing a candidate is a separate manual operation.
+
+## Evaluation
+
+The full-session evaluation exercises the production HTTP router and journey engine through an in-process ASGI transport, with isolated disk-backed learner records. Two fixed synthetic datasets—**algebra sessions** and **statistics sessions**—each contain six scenarios: assisted recovery, prerequisite return, hint reflection, independent fading, resumption after assistance, and invalid/stale actions.
+
+Three policies produce **36 trials**: the adaptive tutor with memory, a fixed-sequence policy without memory, and an adaptive policy without cross-session memory. All trials completed without scenario errors.
+
+| Metric, per dataset | Adaptive + memory | Fixed, no memory | Adaptive, no memory |
+|---|---|---|---|
+| Completed scenarios | 6/6 | 6/6 | 6/6 |
+| Prerequisite review and return | 1/1 | 0/1 | 1/1 |
+| Fresh unaided check | 4/4 | 0/4 | 3/4 |
+| Return-session recall | 4/4 | 0/4 | 0/4 |
+| Memory retained | 4/4 | 0/4 | 0/4 |
+
+These are **workflow and persistence results from scripted synthetic sessions**. The controls are policy ablations, not the earlier B1/B2 model baselines. The evaluation does not measure human learning gains or LLM explanation quality. Applicable denominators, source hashes, and HTTP traces accompany the [results report](evaluation/results/journeys_20261127/report.md).
+
+Reproduce the session evaluation:
+
+```bash
+.venv/bin/python -m evaluation.journeys.run --output evaluation/results/local_journeys
+```
+
+### Automated verification
+
+The November 27 verification passed **201 selected Python tests**, **three frontend tests**, the production build, and formatting checks. Coverage includes HTTP journey scenarios, prerequisite return, revision protection, learner persistence, mathematical checkers, vault links, observability, and MCP session routing.
 
 ```bash
 source .venv/bin/activate
-curl --fail http://127.0.0.1:8000/health
-curl --fail http://127.0.0.1:8501/_stcore/health
-python -m pytest -q tests/test_observability.py tests/test_tool_observability.py
+python -m pytest -q tests/test_journey_tools.py tests/test_journeys.py tests/test_journey_evaluation.py tests/test_vault_math.py tests/test_learners.py tests/test_algebra.py tests/test_algebra_api.py tests/test_custom_math.py tests/test_geometry.py tests/test_studio.py tests/test_observability.py tests/test_tool_observability.py
+npm --prefix frontend test
+npm --prefix frontend run build
+npm --prefix frontend run format:check
 ```
 
-The API health response is `{"status":"ok"}`. The UI health response is `ok`. The selected local tests exercise tracing and scripted tool/LLM behavior; they do not require live LLM or database calls. Health checks establish service availability, not that your external credentials or database are working.
+The selected tests use local fixtures or mocked external calls. Other integration tests can require live services, model credentials, and externally provisioned data. API health confirms service availability; it does not validate external provider credentials.
 
-To try a real request, open the chat UI and ask, for example, “Search the web for recent NVIDIA GPU news and summarize it.” Alternatively:
-
-```bash
-curl --fail -X POST http://127.0.0.1:8000/requests \
-  -H 'Content-Type: application/json' \
-  -d '{"query":"Search the web for recent NVIDIA GPU news and summarize it."}'
-```
-
-Submission returns a `request_id`. Replace `YOUR_REQUEST_ID` below to follow execution:
-
-```bash
-curl --fail http://127.0.0.1:8000/requests/YOUR_REQUEST_ID
-curl --fail http://127.0.0.1:8000/requests/YOUR_REQUEST_ID/activity
-curl --fail http://127.0.0.1:8000/requests/YOUR_REQUEST_ID/events
-```
-
-Actual execution requires valid model credentials, access to the configured endpoint, and internet access for web search. SQL requests additionally require the configured PostgreSQL database.
-
-### Setup verification
-
-Verified on November 6, 2026 with macOS and Python 3.14.10: HTTPS cloning of the default `main` branch, a fresh `.venv` dependency install, `pip check`, and both CLI help commands below. The current selected suite has **105 passing tests**, including guided and LLM-assisted Streamlit flows, wrong model answers, incomplete roots, malformed model responses, bounded schema repair, and non-JSON API responses. Live model calls produced a quadratic solution and a factored expression that independently passed SymPy checks, and a model-generated hint. Earlier live API/UI health checks, the guided tutoring flow, and MCP bank-answer checks also passed. Restart MCP to load the new `verify_symbolic_answer` tool alongside the existing tools.
-
-The original launcher check used an isolated copy with API/UI ports 18000/18501 because an existing process occupied port 8000. The guided algebra smoke check used temporary services on API/UI ports 18000/18501 and MCP port 18001, then shut those services down. Live web searches, PostgreSQL queries, and a full learning cycle were not exercised.
-
-## Try the algebra tutor
-
-After installing the updated `requirements.txt`, start the services as above and open **Algebra Tutor** in the Streamlit page selector. This is a separate practice flow from the general chat page.
-
-1. Keep the starting problem `distribution-01` selected and click **Start new session**. The equation is `3(x - 2) = 12`.
-2. Enter `x=2` and click **Check answer**. Expect **SymPy verification: incorrect**; the problem stays open.
-3. Click **Give me a hint**. The first hint suggests dividing both sides by the factor outside the parentheses.
-4. Enter `x=6`. Expect **SymPy verification: correct** and a next-problem button.
-5. Click **Next problem**. A fresh distribution equation appears. Solve it without a hint to record independent success.
-6. To demonstrate remediation, start a new default session, submit `2` and then `4`, and click **Practice prerequisite**. Solve `3x - 6 = 12` with `6`, then click **Next problem** to return to the original equation.
-
-Use **Verification evidence** for the original equation, normalized answer, real-number domain, SymPy version, and substitution residual. **Session history** shows attempts, hints, transitions, and independent versus assisted successes. Invalid input and verifier failures remain ungraded and do not unlock advancement.
-
-Guided-practice answers are numeric literals, decimals, or fractions, optionally prefixed with `x=`: `6`, `x=6`, `12/2`, `1.5`, and `3/2`. General expressions and multiple solutions use the separate custom-problem mode below. No user input is passed to Python `eval` or SymPy's expression parser.
-
-**Guided practice** uses the predefined problem bank and rule-based feedback. **LLM-assisted problems** handles your own questions as described below. Verification covers final mathematical answers, not every reasoning step or mastery. Sessions/cases are process-local, expire after one idle hour, and disappear on API restart. Run one API worker for this demo. There is no authentication or persistent student profile; treat IDs as private and use it locally.
-
-### LLM-assisted custom problems
-
-1. Configure `ASU_LLM_API_KEY`, `ASU_LLM_BASE_URL`, and `ASU_LLM_MODEL` in `.env`, then restart the API so it loads the configuration.
-2. Open **Algebra Tutor** and select **LLM-assisted problems**.
-3. Choose an example or enter your own question, then click **Ask math tutor**.
-4. Review the operation, equation/expression, variable, real-number domain, and interpretation against your original question. Tick **This interpretation matches my question** only if it does.
-5. Click **Verify model answer**, or enter a student answer and click **Check my answer**. The backend uses its stored interpretation and computes its own SymPy result; it does not accept the model's answer as an answer key.
-6. Use **Ask for a hint** for a generated next-step hint, or expand the LLM explanation. Explanation steps are not individually verified.
-
-Examples to try:
-
-| Question | Answer to check |
-|---|---|
-| Solve `x^2 - 5*x + 6 = 0`. | `2,3` (both roots; `2` alone is incomplete) |
-| Solve `x^2 - 2 = 0`. | `-sqrt(2),sqrt(2)` |
-| Solve `x^2 - x + 6 = 0` over the reals. | `no real solutions` |
-| Factor `x^2 - 9`. | `(x-3)*(x+3)` |
-| Expand `(x+2)*(x-3)`. | `x^2-x-6` |
-| Simplify `3*x + 2*x - 4`. | `5*x-4` |
-| Differentiate `x^3 - 2*x`. | `3*x^2-2` |
-| A number doubled and increased by 3 equals 17. | Review the translation `2*x+3=17`; then check `7`. |
-
-The checker supports one variable (`x`, `y`, or `t`), rational-coefficient polynomials of degree at most 8, and linear/quadratic solving over the reals. Use explicit `*`, integer powers `0..6`, and numeric constant denominators. For equations, provide every real root; `no real solutions` is accepted for an empty real solution set. Arbitrary code/functions, variable denominators, systems, inequalities, trigonometry, geometry, and proofs are outside scope. Inputs are parsed with an allowlisted AST and never executed as Python code.
-
-A correct symbolic result proves the checked statement for the **reviewed interpretation**; it does not establish that an LLM correctly translated a word problem. Unsupported, invalid, or inconclusive checks remain ungraded. Equivalent expressions in the wrong requested factor/expanded form receive a `needs_form` result. Incomplete or malformed model responses receive at most one format-repair attempt within an overall timeout; missing answers are never filled in as if the model supplied them. Model failures return an actionable error rather than a fabricated solution.
-
-The agent runtime can discover `algebra_problems`, `verify_algebra_answer`, and `verify_symbolic_answer` through MCP using the `algebra` skill. General-chat prose does not update a tutoring session or serve as an authoritative grade.
-
-### Test the demo automatically
-
-```bash
-source .venv/bin/activate
-python -m pip install -r requirements.txt
-python -m pytest -q tests/test_algebra.py tests/test_algebra_api.py tests/test_custom_math.py tests/test_observability.py tests/test_tool_observability.py
-```
-
-These automated tests use mocked model replies and make no live provider/database/web-search calls. They cover bank and custom answers, incomplete root sets, wrong model proposals, malformed model output, missing credentials, interpretation confirmation, unsupported expressions, session isolation, stale submissions, the non-JSON response regression, and both Streamlit flows.
-
-### Try the tutoring API
-
-With the API running, create a session:
-
-```bash
-curl --fail -X POST http://127.0.0.1:8000/tutoring/sessions \
-  -H 'Content-Type: application/json' -d '{}'
-```
-
-Copy its `session_id` into `YOUR_SESSION_ID` below. A new session has revision `0`:
-
-```bash
-curl --fail -X POST http://127.0.0.1:8000/tutoring/sessions/YOUR_SESSION_ID/answers \
-  -H 'Content-Type: application/json' \
-  -d '{"problem_id":"distribution-01","answer":"2","revision":0}'
-```
-
-Use the returned `revision` for the next action. The API rejects stale revisions or a different problem ID with HTTP 409, so retries cannot silently grade the wrong problem. The `/docs` page lists all `/tutoring` routes, including hints, next problem, session retrieval, and deletion. Client-supplied grade fields are rejected.
-
-Re-verified on November 8, 2026 with macOS and Python 3.14.10 from a fresh clone: dependency install, `pip check`, the 11 selected local tests, launcher startup, API/UI health checks, loading of both registered skill prompts from `vault/skills/`, and one credentialed web-search request that completed through the Supervisor and `web_search` skill. PostgreSQL queries and a full learning cycle were not exercised.
-
-## Offline learning
-
-Application execution appends production events to `learning/data/traces/production/runtime.jsonl`. The learning dashboard reads trace volume, configuration, evaluation history, policies, candidates, and releases.
-
-With `.venv` active, inspect and run the learning CLI:
-
-```bash
-python -m learning.run --help
-python -m learning.run --verbose
-```
-
-This uses the configured LLM to evaluate historical traces and may create candidate artifacts. It does not release candidates into production. Learning settings are in `learning/config/learning.yaml`; manual promotion is implemented by `learning/release.py`.
-
-An optional workload generator can submit requests to the running API:
-
-```bash
-python generate_learning_traces.py --help
-python generate_learning_traces.py --count 10 --concurrency 2
-```
-
-The built-in workload includes database questions as well as web research. Configure both services before using it; it makes real model/tool calls and appends new production traces.
-
-## Troubleshooting
-
-| Symptom | Check |
-|---|---|
-| `.venv` not found | Create it in the repository root before starting the launcher. |
-| Missing packages or incompatible Python | Activate `.venv`, check `python --version`, reinstall `requirements.txt`, and run `python -m pip check`. |
-| Missing `ASU_LLM_*` variables or model authentication errors | Fill all three settings in `.env` and confirm the endpoint/model are available to your account. |
-| Tool connection fails | Confirm MCP is running and `MCP_SERVER_URL` ends in `/mcp` on port 8001. |
-| Shell workspace error | Replace `workspace_path` from the template with the absolute path of an existing directory. |
-| Address already in use | Stop the process occupying 8000, 8001, or 8501, then restart the launcher. |
-| UI startup stalls at an email prompt | Use `STREAMLIT_SERVER_HEADLESS=true bash start.sh`. |
-
-Most other tests under `tests/` are live integration tests. They may require hosted model credentials, Ollama for local-model cases, MCP, internet access, specific database tables, or machine-specific workspaces. Some rewrite tracked trace/result artifacts. Use the selected local tests above for a first check rather than treating a bare `pytest` run as an offline smoke test.
-
-## Project layout
+## Project structure
 
 | Path | Responsibility |
 |---|---|
-| `orchestrator/` | Request admission and lifecycle coordination. |
-| `supervisor/`, `tasks/`, `worker/` | Delegation, task execution, model/tool clients, and agent runtime. |
-| `mcp_server/`, `skills/`, `vault/` | Tools, the skill registry (`skills/registry.py`), and skill documents, including the registered `web_search`  prompts. |
-| `observability/` | Events, sanitization, sinks, and frontend projections. |
-| `tutoring/` | Trusted algebra bank, exact verification, in-memory sessions, and tutoring API routes. |
-| `api/`, `ui/`, `.streamlit/`, `start.sh` | HTTP API, chat/dashboard pages, theme, and service launcher. |
-| `learning/`, `generate_learning_traces.py` | Offline evaluation, candidates/releases, and workload generation. |
-| `tests/`, `docs/` | Tests, historical artifacts, sample prompts, and runtime contract notes. |
+| [`frontend/`](frontend/) | React and TypeScript workspace, responsive UI, request tracking, and journal. |
+| [`tutoring/`](tutoring/) | Adaptive journey engine, learner evidence, mathematical checkers, and tutoring routes. |
+| [`api/`](api/) | FastAPI application and request/session endpoints. |
+| `orchestrator/`, `supervisor/`, `tasks/`, `worker/` | Request admission, delegation, and concurrent agent execution. |
+| [`mcp_server/`](mcp_server/) | Discoverable tools, including authoritative journey API clients. |
+| [`skills/`](skills/), [`vault/`](vault/) | Runtime skill registration and linked mathematics/teaching notes. |
+| [`observability/`](observability/) | Runtime events, sanitization, traces, and lifecycle projections. |
+| [`learning/`](learning/) | Persistent learner records, trace evaluation, policy candidates, and releases. |
+| [`evaluation/journeys/`](evaluation/journeys/) | Fixed datasets and the full-session comparison runner. |
+| [`ui/`](ui/) | Companion Streamlit interface and dashboards. |
+| [`tests/`](tests/), [`docs/`](docs/) | Automated checks, setup guides, screenshots, and feature documentation. |
 
-## Inequalities and descriptive statistics
+## Documentation
 
-The registered `inequalities` and `statistics` skills expose deterministic tools
-through MCP, with credential-free HTTP checks for the learning workspace:
+- [Interactive tutoring verification](docs/interactive-tutoring-verification.md)
+- [React setup and deployment](frontend/README.md)
+- [Full-session evaluation results](evaluation/results/journeys_20261127/report.md)
+- [Mathematics skills vault](vault/skills/math/DOMAIN.md)
+- [Probability Lab](docs/probability-lab.md)
+- [Linear-system practice](docs/math-linear-systems.md)
 
-- `POST /studio/inequalities/check`: `expression`, `relation` (`<`, `<=`, `>`,
-  `>=`), `rhs`, `variable`, and `answer`. Supports real constant, linear, and
-  quadratic polynomials. Use complete interval notation such as `(-inf, 4]`,
-  unions separated by ` U `, isolated points `{0}`, `empty`, or `R`.
-- `POST /studio/statistics/check`: rational `values` (1–100 strings), `metric`
-  (`mean`, `median`, `range`, `variance`, `standard_deviation`), `convention`
-  (`population` or `sample`), and `answer`. Sample variance uses `n - 1` and
-  needs at least two observations. Checks accept error up to
-  `max(1e-8, abs(expected) * 1e-6)`; use fractions or numeric square roots for
-  exact answers. Modes include all ties; no repeats means no mode.
-- `GET /studio/skills`: the student-facing practice catalogue.
+## Operating notes
 
-Both skills reuse the allowlisted mathematical parser; student expressions are
-never executed. Unsupported expressions are ungraded. Verification establishes
-numeric answers or complete solution sets, not student mastery or proof quality.
-Streamlit and its existing session endpoints remain available.
+KernelAI runs locally with pseudonymous learner IDs and does not provide public multi-user authentication. Learner records are stored under `learning/data/students/` and are git-ignored; set `KERNELAI_STUDENT_DIR` to change that location. The browser-local journal is separate from server-side learner evidence.
 
-## React learning studio (separate frontend)
-
-The new `frontend/` workspace adds a responsive React + TypeScript interface for
-verified practice, research, and a browser-local practice journal. It preserves
-the existing Streamlit app. Install dependencies with `npm --prefix frontend ci`,
-then run `./start-studio.sh` from the repository root. Setup, port overrides,
-production routing, and feature boundaries are documented in
-[frontend/README.md](frontend/README.md).
-
-## Math practice (work in progress)
-
-Two-variable linear-system practice includes exact answer checking, hints, and
-worked elimination steps. See [the math demo](docs/math-linear-systems.md) for
-setup, examples, and current scope.
-
-## Geometry, learner memory and teaching skills
-
-**Geometry** (`tutoring/geometry.py`, skill `geometry`, MCP tool `verify_geometry_answer`)
-checks rectangle area/perimeter, triangle area, circle area/circumference, the
-Pythagorean theorem, the third triangle angle, and coordinate distance, midpoint
-and slope exactly with SymPy. Exact answers (`9*pi`, `3*sqrt(2)`, `7/2`, `(4, 2)`,
-`undefined`) are preferred; a decimal is accepted only if it is correctly rounded
-to its own number of places. Routes: `GET /studio/geometry/problems` (14-problem
-bank) and `POST /studio/geometry/check`.
-
-**Learner memory** (`tutoring/learners.py`, routes under `/learners`) keeps one
-`STUDENT.md` per learner ID in `learning/data/students/<id>/` (git-ignored; set
-`KERNELAI_STUDENT_DIR` to move it). YAML front matter is the source of truth; the
-Markdown body is regenerated on each write. `POST /learners/{id}/check` re-runs the
-skill's own checker on the server, so only verified correct/incorrect results
-change the record. Algebra sessions started with a `learner_id` feed the same
-record. A topic prerequisite graph links algebra, inequalities, linear systems,
-statistics and geometry.
-
-**Teaching behaviour** follows five vault teaching skills, which are also
-registered (with read-only `get_learner_profile` / `plan_learner_next_step` MCP
-tools) so the Supervisor can pair them with a math skill:
-
-| Skill | In the tutor |
-|---|---|
-| retrieve-first-gate | Returning learners recall first; no hint before an attempt. |
-| progressive-hint-ladder | Conceptual, strategic, procedural hints; a short reflection before levels 2–3. |
-| unassisted-evidence-checkpoint | An assisted success is followed by a fresh, hint-free check. |
-| fading-manager | Per-topic support fades (full, light, none) after unaided successes and returns after misses. |
-| confidence-calibration-check | Optional 1–5 ratings before and after feedback, compared with verified accuracy. |
-
-`GET /learners/{id}/plan?skill=…` returns the evidence-based next step. With fewer
-than two recent verified results it makes no claim about the learner; evidence
-older than 30 days is ignored. The React studio shows the plan, hint ladder,
-confidence ratings and learner record (Practice journal page). This is practice
-evidence, not a mastery certificate.
-
-```bash
-python -m pytest -q tests/test_geometry.py tests/test_learners.py
-```
-
-
-## Connected interactive tutoring and session evaluation
-
-Open the React **Learning journey** for server-controlled attempts, graduated
-hints, prerequisite review/return, fresh unaided checks, and evidence-informed
-future sessions. This is distinct from isolated tool checking in Math studio.
-The preserved Streamlit pages and API remain available.
-
-See [verification steps and evaluation boundaries](docs/interactive-tutoring-verification.md)
-and [the full-session evaluation results](evaluation/results/journeys_20261127/report.md).
-The comparison runs multi-turn algebra and statistics scenarios through the
-production HTTP session engine with fixed and memoryless policy controls. It
-does not claim human learning gains or replace earlier B1/B2 model results.
+For port conflicts, stop the conflicting service or use the launcher overrides. If dependencies are missing, activate `.venv`, reinstall `requirements.txt`, and run `python -m pip check`. If research fails, verify the three `ASU_LLM_*` settings and the availability of the configured model, then restart the Python services.
